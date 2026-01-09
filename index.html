@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PropertyMeasure Pro - Alta California</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1c1c1c; min-height: 100vh; color: #fff; overflow: hidden; }
+    .top-bar { background: #2d2d2d; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #444; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #e63946, #c1121f); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
+    .brand-text { font-size: 16px; font-weight: 600; }
+    .brand-text span { color: #e63946; }
+    .top-actions { display: flex; gap: 8px; }
+    .top-btn { background: #404040; border: none; color: #fff; padding: 8px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .top-btn:hover { background: #505050; }
+    .top-btn.primary { background: #2563eb; }
+    .top-btn.success { background: #16a34a; }
+    .top-btn.print-btn { font-size: 14px; font-weight: bold; padding: 8px 20px; }
+    .top-btn.help { background: #8b5cf6; }
+    .job-selector select { background: #1c1c1c; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 12px; }
+    .main-container { display: flex; height: calc(100vh - 50px); }
+    .tools-panel { width: 60px; background: #252525; display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 4px; border-right: 1px solid #444; }
+    .tool-icon { width: 44px; height: 44px; background: transparent; border: none; color: #999; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 18px; }
+    .tool-icon span { font-size: 9px; margin-top: 2px; }
+    .tool-icon:hover { background: #333; color: #fff; }
+    .tool-icon.active { background: #2563eb; color: #fff; }
+    .tool-divider { width: 36px; height: 1px; background: #444; margin: 6px 0; }
+    .canvas-container { flex: 1; background: #1a1a1a; position: relative; overflow: auto; display: flex; justify-content: center; align-items: center; }
+    .canvas-wrapper { position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+    #mainCanvas { display: block; cursor: crosshair; }
+    .right-panel { width: 280px; background: #252525; border-left: 1px solid #444; overflow-y: auto; padding: 12px; }
+    .panel-section { margin-bottom: 16px; }
+    .panel-section h4 { font-size: 11px; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+    .summary-card { background: linear-gradient(135deg, #1e3a5a, #0f172a); border-radius: 8px; padding: 12px; }
+    .summary-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 12px; }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row .value { color: #4ade80; font-weight: 700; }
+    .edge-type { display: flex; align-items: center; gap: 8px; padding: 8px; background: #333; border-radius: 6px; cursor: pointer; border: 2px solid transparent; margin-bottom: 4px; }
+    .edge-type:hover { background: #404040; }
+    .edge-type.active { border-color: #2563eb; }
+    .edge-color { width: 20px; height: 20px; border-radius: 4px; }
+    .edge-info { flex: 1; }
+    .edge-name { font-size: 12px; font-weight: 600; }
+    .edge-desc { font-size: 9px; color: #888; margin-top: 2px; }
+    .line-style-row { display: flex; gap: 6px; margin-bottom: 12px; }
+    .line-style-btn { flex: 1; padding: 8px; background: #333; border: 2px solid transparent; border-radius: 6px; cursor: pointer; text-align: center; }
+    .line-style-btn.active { border-color: #2563eb; }
+    .line-style-btn .preview { height: 3px; background: #fff; margin-bottom: 4px; }
+    .line-style-btn .preview.dashed { background: repeating-linear-gradient(90deg, #fff 0px, #fff 6px, transparent 6px, transparent 10px); }
+    .line-style-btn .preview.dotted { background: repeating-linear-gradient(90deg, #fff 0px, #fff 3px, transparent 3px, transparent 7px); }
+    .line-style-btn span { font-size: 9px; color: #888; }
+    .pitch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+    .pitch-btn { padding: 6px; background: #333; border: none; color: #fff; border-radius: 4px; font-size: 10px; cursor: pointer; }
+    .pitch-btn.active { background: #2563eb; }
+    .prop-input { width: 100%; padding: 8px; background: #333; border: 1px solid #444; border-radius: 4px; color: #fff; font-size: 12px; margin-bottom: 6px; }
+    input[type="range"] { -webkit-appearance: none; background: #444; height: 8px; border-radius: 4px; cursor: pointer; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: #4ade80; border-radius: 50%; cursor: pointer; }
+    .upload-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .upload-box { text-align: center; padding: 40px; }
+    .upload-icon { font-size: 64px; margin-bottom: 20px; }
+    .upload-btn { background: #2563eb; color: white; padding: 14px 32px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    input[type="file"] { display: none; }
+    .quick-input { position: absolute; display: none; background: #222; border: 3px solid #60a5fa; border-radius: 8px; padding: 12px; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    .quick-input input { background: #111; border: 2px solid #444; color: #4ade80; padding: 10px; font-size: 18px; font-weight: bold; width: 120px; border-radius: 4px; }
+    .quick-input button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px; margin-right: 6px; font-size: 14px; font-weight: bold; }
+    .status-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 28px; background: #2d2d2d; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; font-size: 11px; color: #888; }
+    .status-bar .coords { color: #4ade80; }
+    .tip-box { background: #2a3a2a; border: 1px solid #4ade80; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 11px; line-height: 1.5; }
+    .tip-box b { color: #4ade80; }
+    
+    /* Help Modal */
+    .help-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; padding: 20px; }
+    .help-modal.show { display: block; }
+    .help-content { max-width: 900px; margin: 0 auto; background: #2d2d2d; border-radius: 12px; padding: 24px; }
+    .help-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #444; padding-bottom: 15px; }
+    .help-header h2 { font-size: 24px; color: #4ade80; }
+    .help-close { background: #dc2626; border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; }
+    .help-section { margin-bottom: 30px; }
+    .help-section h3 { color: #f97316; margin-bottom: 15px; font-size: 18px; border-left: 4px solid #f97316; padding-left: 10px; }
+    .roof-diagram { display: flex; gap: 20px; flex-wrap: wrap; }
+    .roof-visual { flex: 1; min-width: 300px; background: #1a1a1a; border-radius: 8px; padding: 15px; }
+    .roof-visual svg { width: 100%; height: auto; }
+    .part-list { flex: 1; min-width: 280px; }
+    .part-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: #333; border-radius: 8px; margin-bottom: 8px; }
+    .part-color { width: 24px; height: 24px; border-radius: 4px; flex-shrink: 0; }
+    .part-info h4 { font-size: 14px; margin-bottom: 4px; }
+    .part-info p { font-size: 11px; color: #aaa; line-height: 1.4; }
+    .workflow-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+    .workflow-step { background: #333; border-radius: 8px; padding: 15px; text-align: center; }
+    .workflow-step .num { width: 36px; height: 36px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: bold; font-size: 18px; }
+    .workflow-step h4 { margin-bottom: 8px; color: #4ade80; }
+    .workflow-step p { font-size: 11px; color: #aaa; }
+    .key-tip { background: #3d2d1a; border: 1px solid #f97316; padding: 12px; border-radius: 6px; margin-top: 15px; }
+    .key-tip b { color: #f97316; }
+  </style>
+</head>
+<body>
+  <!-- HELP MODAL -->
+  <div class="help-modal" id="helpModal">
+    <div class="help-content">
+      <div class="help-header">
+        <h2>📚 Beginner's Guide - Roof Parts</h2>
+        <button class="help-close" onclick="closeHelp()">×</button>
+      </div>
+      
+      <div class="help-section">
+        <h3>🏠 Parts of a Roof - Visual Guide</h3>
+        <div class="roof-diagram">
+          <div class="roof-visual" style="text-align: center;">
+            <!-- SVG Roof Diagram -->
+            <svg viewBox="0 0 400 300" style="max-width: 100%; height: auto;">
+              <!-- House base -->
+              <rect x="50" y="180" width="300" height="100" fill="#444" stroke="#000" stroke-width="2"/>
+              
+              <!-- Main roof shape -->
+              <polygon points="200,40 50,140 50,180 350,180 350,140" fill="#666" stroke="#000" stroke-width="2"/>
+              
+              <!-- Ridge line -->
+              <line x1="100" y1="140" x2="300" y2="140" stroke="#ef4444" stroke-width="4" stroke-dasharray="10,5"/>
+              <text x="200" y="130" fill="#ef4444" font-size="12" text-anchor="middle">RIDGE</text>
+              
+              <!-- Hip lines -->
+              <line x1="50" y1="180" x2="100" y2="140" stroke="#f97316" stroke-width="3" stroke-dasharray="8,4"/>
+              <line x1="350" y1="180" x2="300" y2="140" stroke="#f97316" stroke-width="3" stroke-dasharray="8,4"/>
+              <text x="65" y="155" fill="#f97316" font-size="10" transform="rotate(-45 65 155)">HIP</text>
+              <text x="335" y="155" fill="#f97316" font-size="10" transform="rotate(45 335 155)">HIP</text>
+              
+              <!-- Eave lines -->
+              <line x1="50" y1="180" x2="350" y2="180" stroke="#3b82f6" stroke-width="4"/>
+              <text x="200" y="195" fill="#3b82f6" font-size="12" text-anchor="middle">EAVE (Gutter Line)</text>
+              
+              <!-- Rake example on gable end -->
+              <line x1="50" y1="140" x2="50" y2="180" stroke="#22c55e" stroke-width="3"/>
+              <text x="35" y="160" fill="#22c55e" font-size="10" writing-mode="tb">RAKE</text>
+              
+              <!-- Building outline indicator -->
+              <rect x="50" y="140" width="300" height="140" fill="none" stroke="#888" stroke-width="2" stroke-dasharray="5,5"/>
+              <text x="200" y="250" fill="#888" font-size="10" text-anchor="middle">BUILDING OUTLINE</text>
+              
+              <!-- Valley example -->
+              <line x1="200" y1="100" x2="250" y2="180" stroke="#8b5cf6" stroke-width="3" stroke-dasharray="8,4"/>
+              <text x="230" y="145" fill="#8b5cf6" font-size="10">VALLEY</text>
+            </svg>
+          </div>
+          
+          <div class="part-list">
+            <div class="part-item">
+              <div class="part-color" style="background:#ef4444;"></div>
+              <div class="part-info">
+                <h4>⛰️ Ridge</h4>
+                <p>The PEAK at the very top of the roof - like the top of a tent. Usually the longest horizontal line.</p>
+              </div>
+            </div>
+            <div class="part-item">
+              <div class="part-color" style="background:#f97316;"></div>
+              <div class="part-info">
+                <h4>📐 Hip</h4>
+                <p>The SLANTED lines going DOWN from the ridge to the corners. Draw these as DASHED lines.</p>
+              </div>
+            </div>
+            <div class="part-item">
+              <div class="part-color" style="background:#8b5cf6;"></div>
+              <div class="part-info">
+                <h4>⬇️ Valley</h4>
+                <p>The DIP where two roof sections meet - like a taco fold. Water runs down here. Use DASHED lines.</p>
+              </div>
+            </div>
+            <div class="part-item">
+              <div class="part-color" style="background:#3b82f6;"></div>
+              <div class="part-info">
+                <h4>➖ Eave</h4>
+                <p>The BOTTOM horizontal edge where the GUTTER attaches. Goes all around the bottom of the roof.</p>
+              </div>
+            </div>
+            <div class="part-item">
+              <div class="part-color" style="background:#22c55e;"></div>
+              <div class="part-info">
+                <h4>📏 Rake</h4>
+                <p>The SLANTED edge on the TRIANGLE side of the roof (the gable end). It's the angled edge, not horizontal.</p>
+              </div>
+            </div>
+            <div class="part-item">
+              <div class="part-color" style="background:#000;"></div>
+              <div class="part-info">
+                <h4>🏠 Building Outline</h4>
+                <p>The OUTSIDE shape of the entire house - trace around the whole building first before adding inside lines.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="help-section">
+        <h3>📋 Step-by-Step Workflow</h3>
+        <div class="workflow-steps">
+          <div class="workflow-step">
+            <div class="num">1</div>
+            <h4>Upload Image</h4>
+            <p>Load your aerial photo or sketch of the property</p>
+          </div>
+          <div class="workflow-step">
+            <div class="num">2</div>
+            <h4>Trace Outline</h4>
+            <p>Use AREA tool to click corners of the building. Watch for GREEN = straight!</p>
+          </div>
+          <div class="workflow-step">
+            <div class="num">3</div>
+            <h4>Add Inside Lines</h4>
+            <p>Use LINE tool to draw ridge, hip, valley lines. Use DASHED style for these.</p>
+          </div>
+          <div class="workflow-step">
+            <div class="num">4</div>
+            <h4>Enter Real Measurements</h4>
+            <p>Use SELECT tool, click each line, and type the REAL measurement from the field.</p>
+          </div>
+        </div>
+        
+        <div class="key-tip">
+          <b>🔑 KEY TIP:</b> The numbers shown automatically are just GUESSES based on the scale. 
+          You MUST click each line and enter the REAL measurements you took on site!
+        </div>
+      </div>
+      
+      <div class="help-section">
+        <h3>🎯 Quick Reference - Which Edge Type to Use</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <tr style="background:#1a1a1a;">
+            <th style="padding:10px;text-align:left;border-bottom:2px solid #444;">What You See</th>
+            <th style="padding:10px;text-align:left;border-bottom:2px solid #444;">Edge Type</th>
+            <th style="padding:10px;text-align:left;border-bottom:2px solid #444;">Line Style</th>
+          </tr>
+          <tr style="border-bottom:1px solid #444;">
+            <td style="padding:10px;">Outside edge of house</td>
+            <td style="padding:10px;"><span style="color:#000;background:#fff;padding:2px 6px;border-radius:3px;">🏠 Building Outline</span></td>
+            <td style="padding:10px;">SOLID</td>
+          </tr>
+          <tr style="border-bottom:1px solid #444;">
+            <td style="padding:10px;">Top peak of roof</td>
+            <td style="padding:10px;"><span style="color:#ef4444;">⛰️ Ridge</span></td>
+            <td style="padding:10px;">DASHED</td>
+          </tr>
+          <tr style="border-bottom:1px solid #444;">
+            <td style="padding:10px;">Diagonal from peak to corner</td>
+            <td style="padding:10px;"><span style="color:#f97316;">📐 Hip</span></td>
+            <td style="padding:10px;">DASHED</td>
+          </tr>
+          <tr style="border-bottom:1px solid #444;">
+            <td style="padding:10px;">Where two roofs dip together</td>
+            <td style="padding:10px;"><span style="color:#8b5cf6;">⬇️ Valley</span></td>
+            <td style="padding:10px;">DASHED</td>
+          </tr>
+          <tr style="border-bottom:1px solid #444;">
+            <td style="padding:10px;">Bottom edge (gutter line)</td>
+            <td style="padding:10px;"><span style="color:#3b82f6;">➖ Eave</span></td>
+            <td style="padding:10px;">SOLID</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;">Slanted edge on gable</td>
+            <td style="padding:10px;"><span style="color:#22c55e;">📏 Rake</span></td>
+            <td style="padding:10px;">SOLID</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div style="text-align:center;margin-top:20px;">
+        <button onclick="closeHelp()" style="background:#2563eb;color:white;border:none;padding:12px 30px;border-radius:6px;font-size:14px;cursor:pointer;">Got it! Start Measuring</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <div class="brand">
+      <div class="brand-icon">AC</div>
+      <div class="brand-text">Property<span>Measure</span></div>
+    </div>
+    <div class="job-selector">
+      <select id="jobType" onchange="changeJobType()">
+        <option value="roof">🏠 Roofing</option>
+        <option value="gutter">🌧️ Gutters</option>
+        <option value="siding">🧱 Siding</option>
+        <option value="paver">🧱 Pavers</option>
+        <option value="fence">🚧 Fencing</option>
+        <option value="general">📐 General</option>
+      </select>
+    </div>
+    <div class="top-actions">
+      <button class="top-btn help" onclick="showHelp()">❓ Help</button>
+      <label class="top-btn">📷 Image<input type="file" id="imageUpload" accept="image/*"></label>
+      <button class="top-btn" onclick="undo()">↩ Undo</button>
+      <button class="top-btn" onclick="finishCurrentShape()" style="background:#f97316;color:#fff;font-weight:bold;padding:8px 16px;">✓ FINISH</button>
+      <button class="top-btn" onclick="clearAll()">🗑</button>
+      <button class="top-btn primary" onclick="generateReport()">📄 Report</button>
+      <button class="top-btn success print-btn" onclick="printNow()">🖨️ PRINT</button>
+    </div>
+  </div>
+  
+  <div class="main-container">
+    <div class="tools-panel">
+      <button class="tool-icon active" id="tool-area" onclick="setTool('area')">⬡<span>Area</span></button>
+      <button class="tool-icon" id="tool-line" onclick="setTool('line')">📏<span>Line</span></button>
+      <button class="tool-icon" id="tool-label" onclick="setTool('label')">🏷<span>Label</span></button>
+      <button class="tool-icon" id="tool-select" onclick="setTool('select')">👆<span>Select</span></button>
+      <div class="tool-divider"></div>
+      <button class="tool-icon active" onclick="toggleSnap()" id="tool-snap">📐<span>Snap</span></button>
+      <div class="tool-divider"></div>
+      <button class="tool-icon" onclick="zoomIn()">+</button>
+      <button class="tool-icon" onclick="zoomOut()">-</button>
+    </div>
+    
+    <div class="canvas-container">
+      <div class="upload-overlay" id="uploadOverlay">
+        <div class="upload-box">
+          <div class="upload-icon">📐</div>
+          <h2>Upload Property Image</h2>
+          <p style="color:#888;margin-bottom:20px;">Aerial photo, satellite, or sketch</p>
+          <label class="upload-btn">Choose Image<input type="file" accept="image/*" onchange="handleUpload(event)"></label>
+          <p style="color:#4ade80;margin-top:20px;cursor:pointer;" onclick="showHelp()">📚 New here? Click for Beginner's Guide</p>
+        </div>
+      </div>
+      <div class="canvas-wrapper" id="canvasWrapper" style="display:none;">
+        <canvas id="mainCanvas"></canvas>
+        <div id="infoOverlay" style="position:absolute;top:10px;left:10px;background:rgba(255,255,255,0.97);padding:12px 18px;border-radius:8px;border:3px solid #1e3a5f;font-family:Arial;display:none;box-shadow:0 2px 10px rgba(0,0,0,0.3);min-width:200px;">
+          <div style="font-weight:bold;font-size:16px;color:#c1121f;margin-bottom:8px;border-bottom:2px solid #c1121f;padding-bottom:5px;">ALTA CALIFORNIA CONSTRUCTION</div>
+          <div id="overlayName" style="font-size:13px;margin:4px 0;color:#333;"></div>
+          <div id="overlayAddress" style="font-size:13px;margin:4px 0;color:#333;"></div>
+          <div id="overlayDate" style="font-size:13px;margin:4px 0;color:#333;"></div>
+        </div>
+      </div>
+      <div class="quick-input" id="labelInput">
+        <input type="text" id="labelText" placeholder="Label...">
+        <div style="margin-top:8px;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:#888;">Size:</span>
+          <button onclick="adjustLabelTextSize(-2)" style="background:#555;color:#fff;padding:4px 8px;font-size:12px;">A-</button>
+          <span id="labelTextSizeDisplay" style="color:#4ade80;font-size:12px;min-width:30px;text-align:center;">14</span>
+          <button onclick="adjustLabelTextSize(2)" style="background:#555;color:#fff;padding:4px 8px;font-size:12px;">A+</button>
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:#888;">Angle:</span>
+          <button onclick="adjustLabelRotation(-15)" style="background:#555;color:#fff;padding:4px 8px;font-size:12px;">↶</button>
+          <span id="labelRotationDisplay" style="color:#f97316;font-size:12px;min-width:30px;text-align:center;">0°</span>
+          <button onclick="adjustLabelRotation(15)" style="background:#555;color:#fff;padding:4px 8px;font-size:12px;">↷</button>
+          <button onclick="setLabelRotation(90)" style="background:#555;color:#fff;padding:4px 6px;font-size:10px;">90°</button>
+        </div>
+        <div style="margin-top:8px;">
+          <button onclick="confirmLabel()" style="background:#4ade80;color:#000;">✓</button>
+          <button onclick="cancelInput()" style="background:#dc2626;color:#fff;">✗</button>
+        </div>
+      </div>
+      <div class="quick-input" id="edgeInput">
+        <div style="font-size:10px;color:#888;margin-bottom:4px;">ENTER MEASUREMENT:</div>
+        <input type="number" id="edgeLength" placeholder="0" step="0.1">
+        <span style="color:#4ade80;margin-left:4px;">FT</span>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:#888;">Size:</span>
+          <button onclick="adjustEdgeTextSize(-2)" style="background:#555;color:#fff;padding:4px 8px;font-size:12px;">A-</button>
+          <span id="edgeTextSizeDisplay" style="color:#4ade80;font-size:12px;min-width:30px;text-align:center;">14</span>
+          <button onclick="adjustEdgeTextSize(2)" style="background:#555;color:#fff;padding:4px 8px;font-size:12px;">A+</button>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:4px;">
+          <button onclick="confirmEdge()" style="background:#4ade80;color:#000;flex:1;">✓ Save</button>
+          <button onclick="hideEdgeMeasurement()" style="background:#f97316;color:#fff;flex:1;">🚫 Hide</button>
+          <button onclick="cancelInput()" style="background:#dc2626;color:#fff;">✗</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="right-panel">
+      <div class="panel-section" style="background:#1a2a3a;border:3px solid #4ade80;padding:15px;margin-bottom:15px;">
+        <h4 style="color:#4ade80;font-size:15px;margin-bottom:12px;">🏠 PROPERTY INFO</h4>
+        <input type="text" class="prop-input" id="propName" placeholder="Customer Name" oninput="updateInfoOverlay()" style="font-weight:bold;font-size:14px;padding:10px;">
+        <input type="text" class="prop-input" id="propAddress" placeholder="Property Address" oninput="updateInfoOverlay()" style="font-size:14px;padding:10px;">
+        <input type="date" class="prop-input" id="propDate" oninput="updateInfoOverlay()" style="font-size:14px;padding:10px;">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;background:#2a3a4a;padding:10px;border-radius:4px;">
+          <input type="checkbox" id="showInfoOverlay" onchange="toggleInfoOverlay()" checked style="width:18px;height:18px;">
+          <span style="font-size:13px;color:#4ade80;">✓ Show on diagram</span>
+        </label>
+      </div>
+      
+      <div class="tip-box">
+        <b style="color:#f97316;">✓ FINISH</b> or <b>Enter</b> = Complete shape<br>
+        <b>🟠 ORANGE dots</b> = Drag to adjust (Select mode)<br>
+        <b>⚡ MAGENTA</b> = Snap points for accuracy<br>
+        <b>Escape</b> = Cancel current shape<br>
+        <span style="color:#8b5cf6;cursor:pointer;" onclick="showHelp()">❓ Need help? Click here</span>
+      </div>
+      
+      <div class="panel-section" id="selectedLabelControls" style="display:none;">
+        <h4>🏷️ Selected Label</h4>
+        <div style="background:#2563eb33;border:2px solid #2563eb;border-radius:6px;padding:10px;">
+          <div style="margin-bottom:10px;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">SIZE:</div>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:center;">
+              <button class="pitch-btn" onclick="resizeSelectedLabel(-2)" style="font-size:16px;padding:8px 14px;">A-</button>
+              <span id="selectedLabelSize" style="font-size:16px;font-weight:bold;color:#4ade80;">14px</span>
+              <button class="pitch-btn" onclick="resizeSelectedLabel(2)" style="font-size:16px;padding:8px 14px;">A+</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">ROTATE:</div>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:center;">
+              <button class="pitch-btn" onclick="rotateSelectedLabel(-15)" style="padding:8px 12px;">↶ -15°</button>
+              <span id="selectedLabelRotation" style="font-size:14px;font-weight:bold;color:#f97316;">0°</span>
+              <button class="pitch-btn" onclick="rotateSelectedLabel(15)" style="padding:8px 12px;">↷ +15°</button>
+            </div>
+            <div style="display:flex;gap:4px;margin-top:6px;justify-content:center;">
+              <button class="pitch-btn" onclick="setSelectedLabelRotation(0)" style="padding:4px 8px;font-size:10px;">0°</button>
+              <button class="pitch-btn" onclick="setSelectedLabelRotation(45)" style="padding:4px 8px;font-size:10px;">45°</button>
+              <button class="pitch-btn" onclick="setSelectedLabelRotation(90)" style="padding:4px 8px;font-size:10px;">90°</button>
+              <button class="pitch-btn" onclick="setSelectedLabelRotation(-45)" style="padding:4px 8px;font-size:10px;">-45°</button>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:8px;font-size:10px;color:#888;">Keys: +/- size, R rotate, Del remove</div>
+        </div>
+      </div>
+      
+      <div class="panel-section">
+        <h4>📊 Totals</h4>
+        <div class="summary-card">
+          <div class="summary-row"><span>Total Area</span><span class="value" id="totalArea">0 SF</span></div>
+          <div class="summary-row"><span>Total Linear</span><span class="value" id="totalLinear">0 FT</span></div>
+          <div id="breakdownRows"></div>
+        </div>
+      </div>
+      
+      <div class="panel-section">
+        <h4>🔤 Default Text Size</h4>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="pitch-btn" onclick="changeTextSize(-2)">A-</button>
+          <span id="textSizeDisplay" style="flex:1;text-align:center;font-size:14px;font-weight:bold;">14px</span>
+          <button class="pitch-btn" onclick="changeTextSize(2)">A+</button>
+        </div>
+        <div style="font-size:9px;color:#888;margin-top:4px;text-align:center;">For new items. Click existing to resize individually.</div>
+      </div>
+      
+      <div class="panel-section">
+        <h4>👁️ Line/Number Transparency</h4>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:11px;">See-thru</span>
+          <input type="range" id="opacitySlider" min="0.1" max="1" step="0.1" value="1" style="flex:1;" onchange="changeOpacity(this.value)">
+          <span style="font-size:11px;">Solid</span>
+        </div>
+        <div style="text-align:center;margin-top:4px;font-size:12px;color:#4ade80;" id="opacityDisplay">100%</div>
+      </div>
+      
+      <div class="panel-section">
+        <h4>🖼️ Background Image</h4>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:11px;">Faint</span>
+          <input type="range" id="bgOpacitySlider" min="0.1" max="1" step="0.1" value="0.5" style="flex:1;" onchange="changeBgOpacity(this.value)">
+          <span style="font-size:11px;">Bright</span>
+        </div>
+        <div style="text-align:center;margin-top:4px;font-size:12px;color:#60a5fa;" id="bgOpacityDisplay">50%</div>
+      </div>
+      
+      <div class="panel-section">
+        <h4>✏️ Line Style</h4>
+        <div class="line-style-row">
+          <div class="line-style-btn active" onclick="setLineStyle('solid')" data-style="solid"><div class="preview"></div><span>Solid</span></div>
+          <div class="line-style-btn" onclick="setLineStyle('dashed')" data-style="dashed"><div class="preview dashed"></div><span>Dashed</span></div>
+          <div class="line-style-btn" onclick="setLineStyle('dotted')" data-style="dotted"><div class="preview dotted"></div><span>Dotted</span></div>
+        </div>
+      </div>
+      
+      <div class="panel-section">
+        <h4>📏 Edge Type <span style="color:#8b5cf6;font-size:9px;cursor:pointer;" onclick="showHelp()">(what's this?)</span></h4>
+        <div id="edgeTypeList"></div>
+      </div>
+      
+      <div class="panel-section" id="pitchSection">
+        <h4>🏠 Roof Pitch</h4>
+        <div class="pitch-grid">
+          <button class="pitch-btn" onclick="setPitch('Flat')">Flat</button>
+          <button class="pitch-btn" onclick="setPitch('4/12')">4/12</button>
+          <button class="pitch-btn active" onclick="setPitch('6/12')">6/12</button>
+          <button class="pitch-btn" onclick="setPitch('8/12')">8/12</button>
+        </div>
+      </div>
+      
+      <div class="panel-section">
+        <h4>📐 Scale (1" = X feet)</h4>
+        <input type="number" class="prop-input" id="scaleInput" value="10" min="1" max="100">
+      </div>
+    </div>
+  </div>
+  
+  <div class="status-bar">
+    <span id="statusText">Upload an image to begin • Click ❓ Help for beginner guide</span>
+    <span class="coords" id="coordsText">0, 0</span>
+  </div>
+
+  <script>
+    const jobEdgeTypes = {
+      roof: [
+        { id: 'outline', name: '🏠 Building Outline', desc: 'Trace the whole house first', color: '#000000' },
+        { id: 'ridge', name: '⛰️ Ridge', desc: 'Top peak line (use dashed)', color: '#ef4444' },
+        { id: 'hip', name: '📐 Hip', desc: 'Diagonal from peak to corner (use dashed)', color: '#f97316' },
+        { id: 'valley', name: '⬇️ Valley', desc: 'Where two roofs dip together (use dashed)', color: '#8b5cf6' },
+        { id: 'eave', name: '➖ Eave', desc: 'Bottom edge - gutter line', color: '#3b82f6' },
+        { id: 'rake', name: '📏 Rake', desc: 'Slanted edge on gable end', color: '#22c55e' }
+      ],
+      gutter: [
+        { id: 'outline', name: '🏠 Building Outline', desc: 'Trace the whole house', color: '#000000' },
+        { id: 'gutter', name: '➖ Gutter Run', desc: 'Long piece catching water', color: '#3b82f6' },
+        { id: 'downspout', name: '⬇️ Downspout', desc: 'Pipe going down to ground', color: '#22c55e' },
+        { id: 'corner', name: '📐 Corner', desc: 'Where gutter bends', color: '#f97316' }
+      ],
+      siding: [
+        { id: 'outline', name: '🏠 Building Outline', desc: 'Trace the whole house', color: '#000000' },
+        { id: 'wall', name: '🧱 Wall', desc: 'Flat wall section', color: '#3b82f6' },
+        { id: 'corner', name: '📐 Corner', desc: 'Outside corner of house', color: '#22c55e' }
+      ],
+      paver: [
+        { id: 'outline', name: '🏠 Building Outline', desc: 'Trace the area', color: '#000000' },
+        { id: 'field', name: '⬜ Main Area', desc: 'The area you walk on', color: '#3b82f6' },
+        { id: 'border', name: '🔲 Border', desc: 'Edge row', color: '#22c55e' }
+      ],
+      fence: [
+        { id: 'outline', name: '🏠 Property Outline', desc: 'Property boundary', color: '#000000' },
+        { id: 'fence', name: '🚧 Fence Line', desc: 'Where fence goes', color: '#22c55e' },
+        { id: 'gate', name: '🚪 Gate', desc: 'Gate opening', color: '#3b82f6' }
+      ],
+      general: [
+        { id: 'outline', name: '🏠 Outline', desc: 'Main outline', color: '#000000' },
+        { id: 'line', name: '📏 Measure Line', desc: 'General measurement', color: '#3b82f6' }
+      ]
+    };
+    
+    let currentJob = 'roof', currentTool = 'area', currentEdgeType = 'outline';
+    let currentLineStyle = 'solid', currentPitch = '6/12', zoom = 1;
+    let snapOn = true;
+    let elements = [], areas = [], bgImage = null;
+    let history = [];  // Stores snapshots for undo
+    const MAX_HISTORY = 30;
+    const POINT_SNAP_RADIUS = 15;  // Pixels - how close to snap to existing points
+    let allSnapPoints = [];  // Cache of all snappable points
+    let isDrawing = false, currentPoints = [], startPoint = null;
+    let editingEdge = null, labelPos = null;
+    let editingLabelIdx = null;  // Track which label is being edited
+    let currentEditTextSize = 14;  // Track text size being edited
+    let currentEditRotation = 0;  // Track rotation being edited
+    let selectedLabel = null, isDraggingLabel = false, dragOffset = {x:0, y:0};
+    let isDraggingMeasurement = false, draggingMeasurementRef = null;
+    let selectedPoint = null;  // {type: 'area'|'line', areaIdx, pointIdx, lineIdx, endpoint}
+    let isDraggingPoint = false;
+    let canvasW = 800, canvasH = 600;
+    let textSize = 14;  // Default text size for measurements and labels
+    let lineOpacity = 1.0;  // Transparency for lines and measurements (1 = solid, 0 = invisible)
+    let bgOpacity = 0.5;  // Background image opacity
+    
+    const SNAP_TOLERANCE = 2;  // Very tight - only truly straight lines show green
+    
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const areaColors = ['#3b82f6', '#22c55e', '#f97316', '#8b5cf6', '#ec4899'];
+    
+    document.getElementById('propDate').valueAsDate = new Date();
+    updateInfoOverlay();  // Show info overlay with today's date
+    renderEdgeTypes();
+    
+    function showHelp() { document.getElementById('helpModal').classList.add('show'); }
+    function closeHelp() { document.getElementById('helpModal').classList.remove('show'); }
+    
+    function changeJobType() {
+      currentJob = document.getElementById('jobType').value;
+      document.getElementById('pitchSection').style.display = currentJob === 'roof' ? 'block' : 'none';
+      renderEdgeTypes();
+      updateTotals();
+    }
+    
+    function renderEdgeTypes() {
+      const types = jobEdgeTypes[currentJob] || [];
+      document.getElementById('edgeTypeList').innerHTML = types.map((t, i) => `
+        <div class="edge-type ${i === 0 ? 'active' : ''}" onclick="setEdgeType('${t.id}')" data-type="${t.id}">
+          <div class="edge-color" style="background:${t.color};"></div>
+          <div class="edge-info">
+            <div class="edge-name">${t.name}</div>
+            <div class="edge-desc">${t.desc}</div>
+          </div>
+        </div>
+      `).join('');
+      currentEdgeType = types[0]?.id || 'outline';
+    }
+    
+    function setTool(tool) {
+      if (currentTool === 'area' && currentPoints.length > 2) finishArea();
+      currentTool = tool;
+      currentPoints = [];
+      isDrawing = false;
+      selectedLabel = null;
+      isDraggingLabel = false;
+      document.querySelectorAll('.tools-panel .tool-icon').forEach(t => t.classList.remove('active'));
+      document.getElementById('tool-' + tool)?.classList.add('active');
+      canvas.style.cursor = tool === 'select' ? 'pointer' : 'crosshair';
+      
+      if (tool === 'area') setStatus('AREA: Click corners. Double-click or Finish button to complete. Escape to cancel.');
+      else if (tool === 'line') setStatus('LINE: Click and drag. Each line is SEPARATE (not connected).');
+      else if (tool === 'select') setStatus('SELECT: Drag ORANGE dots to adjust points. Click measurements to edit.');
+      else if (tool === 'label') setStatus('LABEL: Click to add text.');
+    }
+    
+    function setEdgeType(type) {
+      // Finish current shape before changing edge type
+      if (currentPoints.length >= 3) {
+        finishArea();
+      } else if (currentPoints.length > 0) {
+        currentPoints = [];  // Cancel incomplete shape
+      }
+      
+      currentEdgeType = type;
+      document.querySelectorAll('.edge-type').forEach(e => e.classList.remove('active'));
+      document.querySelector(`.edge-type[data-type="${type}"]`)?.classList.add('active');
+      
+      // Auto-set dashed and switch to LINE tool for inside roof lines
+      if (type === 'ridge' || type === 'hip' || type === 'valley') {
+        setLineStyle('dashed');
+        setTool('line');  // Switch to line tool - each line will be separate
+      }
+      render();
+    }
+    
+    function setLineStyle(style) {
+      currentLineStyle = style;
+      document.querySelectorAll('.line-style-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.line-style-btn[data-style="${style}"]`)?.classList.add('active');
+    }
+    
+    function setPitch(p) { currentPitch = p; document.querySelectorAll('.pitch-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); }
+    function toggleSnap() { snapOn = !snapOn; document.getElementById('tool-snap').classList.toggle('active', snapOn); setStatus(snapOn ? 'SNAP ON - lines snap to straight' : 'SNAP OFF'); }
+    function zoomIn() { zoom = Math.min(zoom * 1.2, 3); updateCanvasSize(); }
+    function zoomOut() { zoom = Math.max(zoom / 1.2, 0.5); updateCanvasSize(); }
+    function changeTextSize(delta) {
+      textSize = Math.max(10, Math.min(30, textSize + delta));
+      document.getElementById('textSizeDisplay').textContent = textSize + 'px';
+      render();
+    }
+    function changeOpacity(val) {
+      lineOpacity = parseFloat(val);
+      document.getElementById('opacityDisplay').textContent = Math.round(lineOpacity * 100) + '%';
+      render();
+    }
+    function changeBgOpacity(val) {
+      bgOpacity = parseFloat(val);
+      document.getElementById('bgOpacityDisplay').textContent = Math.round(bgOpacity * 100) + '%';
+      render();
+    }
+    function updateInfoOverlay() {
+      const name = document.getElementById('propName').value;
+      const address = document.getElementById('propAddress').value;
+      const dateVal = document.getElementById('propDate').value;
+      let formattedDate = '';
+      if (dateVal) {
+        const d = new Date(dateVal);
+        formattedDate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+      }
+      document.getElementById('overlayName').innerHTML = name ? '<b>Customer:</b> ' + name : '';
+      document.getElementById('overlayAddress').innerHTML = address ? '<b>Address:</b> ' + address : '';
+      document.getElementById('overlayDate').innerHTML = formattedDate ? '<b>Date:</b> ' + formattedDate : '';
+      // Show overlay if any field has content
+      const hasContent = name || address || dateVal;
+      const showCheckbox = document.getElementById('showInfoOverlay').checked;
+      document.getElementById('infoOverlay').style.display = (hasContent && showCheckbox) ? 'block' : 'none';
+    }
+    function toggleInfoOverlay() {
+      updateInfoOverlay();
+    }
+    
+    document.getElementById('imageUpload').addEventListener('change', handleUpload);
+    
+    function handleUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const img = new Image();
+        img.onload = function() {
+          bgImage = img;
+          const maxW = window.innerWidth - 380, maxH = window.innerHeight - 100;
+          const sc = Math.min(maxW / img.width, maxH / img.height, 1);
+          canvasW = Math.round(img.width * sc);
+          canvasH = Math.round(img.height * sc);
+          updateCanvasSize();
+          document.getElementById('uploadOverlay').style.display = 'none';
+          document.getElementById('canvasWrapper').style.display = 'block';
+          updateInfoOverlay();  // Show info if any fields are filled
+          render();
+          setStatus('Ready! Click corners to trace. Watch for GREEN = straight!');
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    function updateCanvasSize() {
+      canvas.width = Math.round(canvasW * zoom);
+      canvas.height = Math.round(canvasH * zoom);
+      render();
+    }
+    
+    function getEdgeColor(type) {
+      const t = (jobEdgeTypes[currentJob] || []).find(x => x.id === type);
+      return t?.color || '#3b82f6';
+    }
+    
+    function isAngleStraight(angleDeg) {
+      const absAngle = Math.abs(angleDeg);
+      const nearH = absAngle < SNAP_TOLERANCE || absAngle > (180 - SNAP_TOLERANCE);
+      const nearV = absAngle > (90 - SNAP_TOLERANCE) && absAngle < (90 + SNAP_TOLERANCE);
+      const near45 = (absAngle > (45 - SNAP_TOLERANCE) && absAngle < (45 + SNAP_TOLERANCE)) ||
+                     (absAngle > (135 - SNAP_TOLERANCE) && absAngle < (135 + SNAP_TOLERANCE));
+      return { isStraight: nearH || nearV || near45, nearH, nearV, near45 };
+    }
+    
+    function snapAngle(start, end) {
+      if (!snapOn) return end;
+      const dx = end.x - start.x, dy = end.y - start.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      const snapAngles = [0, 45, 90, 135, 180, -45, -90, -135, -180];
+      for (const s of snapAngles) {
+        if (Math.abs(angle - s) <= SNAP_TOLERANCE) {
+          const rad = s * Math.PI / 180;
+          return { x: start.x + dist * Math.cos(rad), y: start.y + dist * Math.sin(rad) };
+        }
+      }
+      return end;
+    }
+    
+    // Collect all existing points that can be snapped to
+    function updateSnapPoints() {
+      allSnapPoints = [];
+      // Add all area corner points
+      areas.forEach(area => {
+        area.points.forEach(p => {
+          allSnapPoints.push({ x: p.x, y: p.y, type: 'corner' });
+        });
+      });
+      // Add all line endpoints
+      elements.filter(e => e.type === 'line').forEach(line => {
+        allSnapPoints.push({ x: line.x1, y: line.y1, type: 'endpoint' });
+        allSnapPoints.push({ x: line.x2, y: line.y2, type: 'endpoint' });
+      });
+      // Add current drawing points (except first point - that's for closing the shape)
+      if (currentPoints.length > 1) {
+        currentPoints.slice(1).forEach(p => {
+          allSnapPoints.push({ x: p.x, y: p.y, type: 'current' });
+        });
+      }
+    }
+    
+    // Find nearest snap point within radius
+    function findNearestSnapPoint(pos, excludePoint = null) {
+      if (!snapOn) return null;
+      let nearest = null;
+      let nearestDist = POINT_SNAP_RADIUS;
+      for (const sp of allSnapPoints) {
+        // Skip excluded point (e.g., the point being dragged)
+        if (excludePoint && calcDist(sp, excludePoint) < 1) continue;
+        const d = calcDist(pos, sp);
+        if (d < nearestDist) {
+          nearestDist = d;
+          nearest = sp;
+        }
+      }
+      return nearest;
+    }
+    
+    // Apply both point snap and angle snap
+    function smartSnap(start, end) {
+      // First check for point snap (higher priority)
+      const pointSnap = findNearestSnapPoint(end);
+      if (pointSnap) {
+        return { x: pointSnap.x, y: pointSnap.y, snappedToPoint: true };
+      }
+      // Then apply angle snap if we have a start point
+      if (start && snapOn) {
+        const angleSnapped = snapAngle(start, end);
+        return { ...angleSnapped, snappedToPoint: false };
+      }
+      return { ...end, snappedToPoint: false };
+    }
+    
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#e5e5e5';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      if (bgImage) {
+        ctx.globalAlpha = bgOpacity;
+        ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1;
+      }
+      
+      // Draw completed areas
+      areas.forEach((area, idx) => {
+        const color = areaColors[idx % areaColors.length];
+        ctx.globalAlpha = lineOpacity * 0.25;  // Area fill is always somewhat transparent
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        area.points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x * zoom, p.y * zoom) : ctx.lineTo(p.x * zoom, p.y * zoom));
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = lineOpacity;  // Apply opacity to lines
+        
+        area.edges.forEach(edge => {
+          ctx.strokeStyle = getEdgeColor(edge.type);
+          ctx.lineWidth = 3;
+          if (edge.lineStyle === 'dashed') ctx.setLineDash([10, 6]);
+          else if (edge.lineStyle === 'dotted') ctx.setLineDash([4, 6]);
+          else ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.moveTo(edge.p1.x * zoom, edge.p1.y * zoom);
+          ctx.lineTo(edge.p2.x * zoom, edge.p2.y * zoom);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          // Show measurement on ALL edges - ALWAYS visible (unless hidden)
+          if (!edge.hidden) {
+            const offsetX = edge.labelOffsetX || 0;
+            const offsetY = edge.labelOffsetY || 0;
+            const midX = ((edge.p1.x + edge.p2.x) / 2 + offsetX) * zoom;
+            const midY = ((edge.p1.y + edge.p2.y) / 2 + offsetY) * zoom;
+            const feet = edge.manualLength !== undefined ? edge.manualLength : pixelsToFeet(calcDist(edge.p1, edge.p2));
+            const isManual = edge.manualLength !== undefined;
+            // Use individual text size or default
+            const edgeTextSize = edge.textSize || textSize;
+            const boxW = edgeTextSize * 4.5;
+            const boxH = edgeTextSize * 2;
+            // Draw measurement box
+            ctx.fillStyle = isManual ? '#16a34a' : '#1e40af';
+            ctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            ctx.strokeStyle = isManual ? '#22c55e' : '#60a5fa';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold ' + edgeTextSize + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(feet.toFixed(1) + "'", midX, midY + edgeTextSize/3);
+          }
+        });
+        
+        ctx.globalAlpha = lineOpacity;
+        area.points.forEach((p, pIdx) => {
+          // Make points larger and more visible in select mode
+          const isSelectMode = currentTool === 'select';
+          const pointSize = isSelectMode ? 10 : 5;
+          ctx.fillStyle = isSelectMode ? '#f97316' : '#fff';
+          ctx.strokeStyle = isSelectMode ? '#fff' : color;
+          ctx.lineWidth = isSelectMode ? 3 : 2;
+          ctx.beginPath();
+          ctx.arc(p.x * zoom, p.y * zoom, pointSize, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        });
+        ctx.globalAlpha = 1;  // Reset for next area
+      });
+      
+      // Draw standalone lines
+      elements.filter(e => e.type === 'line').forEach(line => {
+        ctx.globalAlpha = lineOpacity;
+        ctx.strokeStyle = getEdgeColor(line.edgeType);
+        ctx.lineWidth = 3;
+        if (line.lineStyle === 'dashed') ctx.setLineDash([10, 6]);
+        else if (line.lineStyle === 'dotted') ctx.setLineDash([4, 6]);
+        else ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(line.x1 * zoom, line.y1 * zoom);
+        ctx.lineTo(line.x2 * zoom, line.y2 * zoom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Show measurement - ALWAYS visible (unless hidden)
+        if (!line.hidden) {
+          const offsetX = line.labelOffsetX || 0;
+          const offsetY = line.labelOffsetY || 0;
+          const midX = ((line.x1 + line.x2) / 2 + offsetX) * zoom;
+          const midY = ((line.y1 + line.y2) / 2 + offsetY) * zoom;
+          const feet = line.manualLength !== undefined ? line.manualLength : pixelsToFeet(calcDist({x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}));
+          const isManual = line.manualLength !== undefined;
+          // Use individual text size or default
+          const lineTextSize = line.textSize || textSize;
+          const boxW = lineTextSize * 4.5;
+          const boxH = lineTextSize * 2;
+          // Draw measurement box
+          ctx.fillStyle = isManual ? '#16a34a' : '#1e40af';
+          ctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          ctx.strokeStyle = isManual ? '#22c55e' : '#60a5fa';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold ' + lineTextSize + 'px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(feet.toFixed(1) + "'", midX, midY + lineTextSize/3);
+        }
+        
+        // Draw line endpoints (draggable in select mode)
+        if (currentTool === 'select') {
+          ctx.fillStyle = '#f97316';
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(line.x1 * zoom, line.y1 * zoom, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(line.x2 * zoom, line.y2 * zoom, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        
+        ctx.globalAlpha = 1;  // Reset after each line
+      });
+      
+      // Draw labels with rotation
+      let labelIdx = 0;
+      elements.filter(e => e.type === 'label').forEach((lbl) => {
+        ctx.save();
+        ctx.globalAlpha = lineOpacity;
+        ctx.translate(lbl.x * zoom, lbl.y * zoom);
+        ctx.rotate((lbl.rotation || 0) * Math.PI / 180);
+        const lblTextSize = lbl.textSize || textSize;
+        ctx.font = 'bold ' + lblTextSize + 'px Arial';
+        const width = ctx.measureText(lbl.text).width;
+        if (selectedLabel === labelIdx) {
+          ctx.fillStyle = 'rgba(37, 99, 235, 0.3)';
+          ctx.fillRect(-5, -lblTextSize - 2, width + 10, lblTextSize + 8);
+          ctx.strokeStyle = '#2563eb';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(-5, -lblTextSize - 2, width + 10, lblTextSize + 8);
+        }
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.textAlign = 'left';
+        ctx.strokeText(lbl.text, 0, 0);
+        ctx.fillText(lbl.text, 0, 0);
+        ctx.restore();
+        labelIdx++;
+      });
+      
+      // Draw current area points
+      if (currentTool === 'area' && currentPoints.length > 0) {
+        ctx.strokeStyle = '#2563eb';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        currentPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x * zoom, p.y * zoom) : ctx.lineTo(p.x * zoom, p.y * zoom));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        currentPoints.forEach(p => {
+          ctx.fillStyle = '#2563eb';
+          ctx.beginPath();
+          ctx.arc(p.x * zoom, p.y * zoom, 6, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+      
+      // Draw snap point indicators when drawing mode is active
+      if ((currentTool === 'area' || currentTool === 'line') && snapOn && !isDraggingPoint) {
+        updateSnapPoints();
+        if (allSnapPoints.length > 0) {
+          ctx.globalAlpha = 0.6;
+          allSnapPoints.forEach(sp => {
+            // Draw small magenta circles at snap points
+            ctx.fillStyle = '#e11d48';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(sp.x * zoom, sp.y * zoom, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          });
+          ctx.globalAlpha = 1;
+        }
+      }
+      
+      updateTotals();
+      updateSelectedLabelPanel();
+    }
+    
+    function pixelsToFeet(px) { return (px / 96) * (parseFloat(document.getElementById('scaleInput').value) || 10); }
+    function calcDist(p1, p2) { return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)); }
+    function calcAreaSqft(area) {
+      let a = 0;
+      const pts = area.points;
+      for (let i = 0; i < pts.length; i++) { const j = (i + 1) % pts.length; a += pts[i].x * pts[j].y - pts[j].x * pts[i].y; }
+      const pxPerFt = 96 / (parseFloat(document.getElementById('scaleInput').value) || 10);
+      return Math.abs(a) / 2 / (pxPerFt * pxPerFt);
+    }
+    
+    function updateTotals() {
+      let totalArea = 0, totalLinear = 0, byType = {};
+      const types = jobEdgeTypes[currentJob] || [];
+      types.forEach(t => byType[t.id] = 0);
+      areas.forEach(a => {
+        totalArea += calcAreaSqft(a);
+        a.edges.forEach(e => {
+          const len = e.manualLength !== undefined ? e.manualLength : pixelsToFeet(calcDist(e.p1, e.p2));
+          totalLinear += len;
+          if (byType[e.type] !== undefined) byType[e.type] += len;
+        });
+      });
+      elements.filter(e => e.type === 'line').forEach(line => {
+        const len = line.manualLength !== undefined ? line.manualLength : pixelsToFeet(calcDist({x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}));
+        totalLinear += len;
+        if (byType[line.edgeType] !== undefined) byType[line.edgeType] += len;
+      });
+      document.getElementById('totalArea').textContent = totalArea.toFixed(0) + ' SF';
+      document.getElementById('totalLinear').textContent = totalLinear.toFixed(0) + ' FT';
+      document.getElementById('breakdownRows').innerHTML = types.filter(t => byType[t.id] > 0).map(t => 
+        `<div class="summary-row"><span>${t.name}</span><span class="value">${byType[t.id].toFixed(0)} FT</span></div>`
+      ).join('');
+    }
+    
+    canvas.addEventListener('mousedown', onDown);
+    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('mouseup', onUp);
+    canvas.addEventListener('dblclick', (e) => { 
+      if (currentTool === 'area' && currentPoints.length > 2) { finishArea(); return; }
+      // Double-click to edit label text
+      if (currentTool === 'select') {
+        const pos = getPos(e);
+        const clickedLabelIdx = findClickedLabel(pos);
+        if (clickedLabelIdx !== null) {
+          editLabelText(clickedLabelIdx, pos);
+        }
+      }
+    });
+    
+    function getPos(e) { const rect = canvas.getBoundingClientRect(); return { x: (e.clientX - rect.left) / zoom, y: (e.clientY - rect.top) / zoom }; }
+    
+    function findClickedMeasurement(pos) {
+      // Check area edges
+      for (let a = 0; a < areas.length; a++) {
+        for (let e = 0; e < areas[a].edges.length; e++) {
+          const edge = areas[a].edges[e];
+          const edgeTextSize = edge.textSize || textSize;
+          const boxW = edgeTextSize * 4.5;
+          const boxH = edgeTextSize * 2;
+          const offsetX = edge.labelOffsetX || 0;
+          const offsetY = edge.labelOffsetY || 0;
+          const midX = (edge.p1.x + edge.p2.x) / 2 + offsetX;
+          const midY = (edge.p1.y + edge.p2.y) / 2 + offsetY;
+          if (pos.x >= midX - boxW/2 - 5 && pos.x <= midX + boxW/2 + 5 && pos.y >= midY - boxH/2 - 5 && pos.y <= midY + boxH/2 + 5) {
+            return { type: 'area', areaIdx: a, edgeIdx: e, edge, midX, midY };
+          }
+        }
+      }
+      // Check standalone lines
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'line') {
+          const line = elements[i];
+          const lineTextSize = line.textSize || textSize;
+          const boxW = lineTextSize * 4.5;
+          const boxH = lineTextSize * 2;
+          const offsetX = line.labelOffsetX || 0;
+          const offsetY = line.labelOffsetY || 0;
+          const midX = (line.x1 + line.x2) / 2 + offsetX;
+          const midY = (line.y1 + line.y2) / 2 + offsetY;
+          if (pos.x >= midX - boxW/2 - 5 && pos.x <= midX + boxW/2 + 5 && pos.y >= midY - boxH/2 - 5 && pos.y <= midY + boxH/2 + 5) {
+            return { type: 'line', lineIdx: i, edge: line, midX, midY };
+          }
+        }
+      }
+      return null;
+    }
+    
+    function findClickedLabel(pos) {
+      const labels = elements.filter(e => e.type === 'label');
+      for (let i = labels.length - 1; i >= 0; i--) {
+        const lbl = labels[i];
+        const lblTextSize = lbl.textSize || textSize;
+        ctx.font = 'bold ' + lblTextSize + 'px Arial';
+        const width = ctx.measureText(lbl.text).width + 20;
+        // Bigger hit area for easier clicking
+        if (pos.x >= lbl.x - 15 && pos.x <= lbl.x + width + 15 && pos.y >= lbl.y - lblTextSize - 10 && pos.y <= lbl.y + 15) return i;
+      }
+      return null;
+    }
+    
+    function findClickedPoint(pos) {
+      const threshold = 12;  // Click radius for points
+      
+      // Check area corner points
+      for (let a = 0; a < areas.length; a++) {
+        for (let p = 0; p < areas[a].points.length; p++) {
+          const pt = areas[a].points[p];
+          if (calcDist(pos, pt) < threshold) {
+            return { type: 'area', areaIdx: a, pointIdx: p, point: pt };
+          }
+        }
+      }
+      
+      // Check line endpoints
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'line') {
+          const line = elements[i];
+          if (calcDist(pos, {x: line.x1, y: line.y1}) < threshold) {
+            return { type: 'line', lineIdx: i, endpoint: 'start', point: {x: line.x1, y: line.y1} };
+          }
+          if (calcDist(pos, {x: line.x2, y: line.y2}) < threshold) {
+            return { type: 'line', lineIdx: i, endpoint: 'end', point: {x: line.x2, y: line.y2} };
+          }
+        }
+      }
+      
+      return null;
+    }
+    
+    function onDown(e) {
+      const pos = getPos(e);
+      
+      // Check for measurement box click in ANY mode - always allow editing measurements
+      const clickedMeasurement = findClickedMeasurement(pos);
+      if (clickedMeasurement) {
+        if (e.shiftKey) {
+          // Start dragging the measurement label
+          isDraggingMeasurement = true;
+          draggingMeasurementRef = clickedMeasurement;
+          dragOffset = { x: pos.x - clickedMeasurement.midX, y: pos.y - clickedMeasurement.midY };
+          setStatus('Dragging measurement label - release to place');
+          return;
+        } else {
+          // Open input to edit value
+          selectedLabel = null;
+          editingEdge = clickedMeasurement;
+          showEdgeInput(clickedMeasurement, pos);
+          return;
+        }
+      }
+      
+      if (currentTool === 'select') {
+        // Check for corner/endpoint clicks first (for dragging points)
+        const clickedPt = findClickedPoint(pos);
+        if (clickedPt) {
+          saveState();  // Save state before moving
+          selectedPoint = clickedPt;
+          isDraggingPoint = true;
+          selectedLabel = null;
+          setStatus('Drag to move point. Release to place. Snaps to nearby points.');
+          render();
+          return;
+        }
+        
+        // Check for text labels
+        const clickedLabelIdx = findClickedLabel(pos);
+        if (clickedLabelIdx !== null) {
+          selectedLabel = clickedLabelIdx;
+          isDraggingLabel = true;
+          const labels = elements.filter(el => el.type === 'label');
+          dragOffset = { x: pos.x - labels[clickedLabelIdx].x, y: pos.y - labels[clickedLabelIdx].y };
+          render();
+          setStatus('Label selected: + to enlarge, - to shrink, R=rotate, Delete=remove, drag to move');
+          return;
+        }
+        
+        // Check for clicking on edge line itself
+        const clicked = findClickedEdge(pos);
+        if (clicked) {
+          selectedLabel = null;
+          editingEdge = clicked;
+          showEdgeInput(clicked, pos);
+          return;
+        }
+        selectedLabel = null;
+        render();
+        return;
+      }
+      
+      if (currentTool === 'label') { labelPos = pos; showLabelInput(pos); return; }
+      
+      if (currentTool === 'area') {
+        updateSnapPoints();
+        // Check if clicking near first point to close shape
+        if (currentPoints.length > 2 && calcDist(pos, currentPoints[0]) < 15) { finishArea(); return; }
+        
+        // Smart snap: first try point snap, then angle snap
+        let snapPos = pos;
+        const pointSnap = findNearestSnapPoint(pos);
+        if (pointSnap) {
+          snapPos = { x: pointSnap.x, y: pointSnap.y };
+          setStatus(`⚡ SNAPPED to existing point! Point ${currentPoints.length + 1} placed.`);
+        } else if (snapOn && currentPoints.length > 0) {
+          snapPos = snapAngle(currentPoints[currentPoints.length - 1], pos);
+        }
+        currentPoints.push(snapPos);
+        render();
+        if (!pointSnap) setStatus(`Point ${currentPoints.length} placed. ${currentPoints.length >= 3 ? 'Double-click or Finish to complete.' : ''}`);
+        return;
+      }
+      
+      if (currentTool === 'line') { 
+        updateSnapPoints();
+        // Snap start point to existing points
+        const pointSnap = findNearestSnapPoint(pos);
+        if (pointSnap) {
+          startPoint = { x: pointSnap.x, y: pointSnap.y };
+          setStatus('⚡ Line starting from snapped point');
+        } else {
+          startPoint = pos; 
+        }
+        isDrawing = true;
+      }
+    }
+    
+    function onMove(e) {
+      const pos = getPos(e);
+      document.getElementById('coordsText').textContent = `${Math.round(pos.x)}, ${Math.round(pos.y)}`;
+      
+      // Handle dragging measurement labels - works in ANY mode
+      if (isDraggingMeasurement && draggingMeasurementRef) {
+        const ref = draggingMeasurementRef;
+        const baseMidX = ref.type === 'area' ? (ref.edge.p1.x + ref.edge.p2.x) / 2 : (ref.edge.x1 + ref.edge.x2) / 2;
+        const baseMidY = ref.type === 'area' ? (ref.edge.p1.y + ref.edge.p2.y) / 2 : (ref.edge.y1 + ref.edge.y2) / 2;
+        const newOffsetX = (pos.x - dragOffset.x) - baseMidX;
+        const newOffsetY = (pos.y - dragOffset.y) - baseMidY;
+        
+        if (ref.type === 'area') {
+          areas[ref.areaIdx].edges[ref.edgeIdx].labelOffsetX = newOffsetX;
+          areas[ref.areaIdx].edges[ref.edgeIdx].labelOffsetY = newOffsetY;
+        } else {
+          elements[ref.lineIdx].labelOffsetX = newOffsetX;
+          elements[ref.lineIdx].labelOffsetY = newOffsetY;
+        }
+        render();
+        return;
+      }
+      
+      // Handle dragging corner points
+      if (isDraggingPoint && selectedPoint) {
+        updateSnapPoints();
+        // Check for snap to other points (exclude the one being dragged)
+        let newPos = pos;
+        const pointSnap = findNearestSnapPoint(pos, selectedPoint.point);
+        if (pointSnap) {
+          newPos = { x: pointSnap.x, y: pointSnap.y };
+        }
+        
+        if (selectedPoint.type === 'area') {
+          // Update the area point
+          areas[selectedPoint.areaIdx].points[selectedPoint.pointIdx] = { x: newPos.x, y: newPos.y };
+          // Update the edges that use this point
+          const pts = areas[selectedPoint.areaIdx].points;
+          const edges = areas[selectedPoint.areaIdx].edges;
+          for (let i = 0; i < edges.length; i++) {
+            edges[i].p1 = pts[i];
+            edges[i].p2 = pts[(i + 1) % pts.length];
+          }
+          selectedPoint.point = { x: newPos.x, y: newPos.y };
+        } else if (selectedPoint.type === 'line') {
+          // Update line endpoint
+          if (selectedPoint.endpoint === 'start') {
+            elements[selectedPoint.lineIdx].x1 = newPos.x;
+            elements[selectedPoint.lineIdx].y1 = newPos.y;
+          } else {
+            elements[selectedPoint.lineIdx].x2 = newPos.x;
+            elements[selectedPoint.lineIdx].y2 = newPos.y;
+          }
+          selectedPoint.point = { x: newPos.x, y: newPos.y };
+        }
+        render();
+        
+        // Draw snap indicator if snapping
+        if (pointSnap) {
+          ctx.fillStyle = '#e11d48';
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(pointSnap.x * zoom, pointSnap.y * zoom, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          // Label
+          ctx.fillStyle = '#e11d48';
+          ctx.fillRect(pointSnap.x * zoom + 18, pointSnap.y * zoom - 12, 90, 24);
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 11px Arial';
+          ctx.textAlign = 'left';
+          ctx.fillText('⚡ SNAPPING', pointSnap.x * zoom + 23, pointSnap.y * zoom + 4);
+        }
+        return;
+      }
+      
+      if (currentTool === 'select' && isDraggingLabel && selectedLabel !== null) {
+        const labels = elements.filter(el => el.type === 'label');
+        let count = 0;
+        for (let i = 0; i < elements.length; i++) {
+          if (elements[i].type === 'label') {
+            if (count === selectedLabel) {
+              elements[i].x = pos.x - dragOffset.x;
+              elements[i].y = pos.y - dragOffset.y;
+              break;
+            }
+            count++;
+          }
+        }
+        render();
+        return;
+      }
+      
+      if (currentTool === 'area' && currentPoints.length > 0) {
+        render();
+        updateSnapPoints();
+        const lastPoint = currentPoints[currentPoints.length - 1];
+        const dx = pos.x - lastPoint.x, dy = pos.y - lastPoint.y;
+        const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+        const { isStraight, nearH, nearV } = isAngleStraight(angleDeg);
+        
+        // Check for point snap first
+        const pointSnap = findNearestSnapPoint(pos);
+        let snapped;
+        let snappedToPoint = false;
+        if (pointSnap) {
+          snapped = { x: pointSnap.x, y: pointSnap.y };
+          snappedToPoint = true;
+        } else {
+          snapped = snapOn ? snapAngle(lastPoint, pos) : pos;
+        }
+        
+        ctx.beginPath();
+        ctx.moveTo(lastPoint.x * zoom, lastPoint.y * zoom);
+        ctx.lineTo(snapped.x * zoom, snapped.y * zoom);
+        ctx.strokeStyle = snappedToPoint ? '#e11d48' : (isStraight ? '#00ff00' : '#ff0000');
+        ctx.lineWidth = snappedToPoint ? 6 : (isStraight ? 6 : 4);
+        ctx.setLineDash(snappedToPoint || isStraight ? [] : [10, 8]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = snappedToPoint ? '#e11d48' : (isStraight ? '#00ff00' : '#ff0000');
+        ctx.beginPath();
+        ctx.arc(snapped.x * zoom, snapped.y * zoom, snappedToPoint ? 14 : 10, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw a ring around snap target for emphasis
+        if (snappedToPoint) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(snapped.x * zoom, snapped.y * zoom, 18, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        
+        const boxX = Math.min(snapped.x * zoom + 25, canvas.width - 170);
+        const boxY = Math.max(snapped.y * zoom - 80, 10);
+        ctx.fillStyle = snappedToPoint ? '#e11d48' : (isStraight ? '#00ff00' : '#ff0000');
+        ctx.fillRect(boxX, boxY, 160, 55);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(boxX, boxY, 160, 55);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'left';
+        if (snappedToPoint) {
+          ctx.fillText('⚡ SNAP TO POINT!', boxX + 10, boxY + 25);
+          ctx.font = '12px Arial';
+          ctx.fillText('Click to connect', boxX + 10, boxY + 45);
+        } else if (isStraight) {
+          ctx.fillStyle = '#000';
+          let txt = '✓ STRAIGHT!';
+          if (nearH) txt = '✓ HORIZONTAL!';
+          else if (nearV) txt = '✓ VERTICAL!';
+          ctx.fillText(txt, boxX + 10, boxY + 25);
+          ctx.font = '12px Arial';
+          ctx.fillText('Click to place point', boxX + 10, boxY + 45);
+        } else {
+          ctx.fillText('✗ NOT STRAIGHT', boxX + 10, boxY + 25);
+          ctx.font = '14px Arial';
+          ctx.fillText(`Angle: ${Math.abs(angleDeg).toFixed(0)}°`, boxX + 10, boxY + 45);
+        }
+        const len = pixelsToFeet(calcDist(lastPoint, snapped));
+        ctx.fillStyle = '#000';
+        ctx.fillRect(boxX, boxY + 60, 90, 25);
+        ctx.fillStyle = '#4ade80';
+        ctx.font = 'bold 14px Courier New';
+        ctx.fillText(`${len.toFixed(1)} FT`, boxX + 8, boxY + 78);
+      }
+      
+      if (currentTool === 'line' && isDrawing && startPoint) {
+        render();
+        updateSnapPoints();
+        const dx = pos.x - startPoint.x, dy = pos.y - startPoint.y;
+        const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+        const { isStraight } = isAngleStraight(angleDeg);
+        
+        // Check for point snap first
+        const pointSnap = findNearestSnapPoint(pos);
+        let snapped;
+        let snappedToPoint = false;
+        if (pointSnap) {
+          snapped = { x: pointSnap.x, y: pointSnap.y };
+          snappedToPoint = true;
+        } else {
+          snapped = snapOn ? snapAngle(startPoint, pos) : pos;
+        }
+        
+        ctx.beginPath();
+        ctx.moveTo(startPoint.x * zoom, startPoint.y * zoom);
+        ctx.lineTo(snapped.x * zoom, snapped.y * zoom);
+        ctx.strokeStyle = snappedToPoint ? '#e11d48' : (isStraight ? '#00ff00' : '#ff0000');
+        ctx.lineWidth = 6;
+        ctx.stroke();
+        ctx.fillStyle = snappedToPoint ? '#e11d48' : (isStraight ? '#00ff00' : '#ff0000');
+        ctx.beginPath();
+        ctx.arc(snapped.x * zoom, snapped.y * zoom, snappedToPoint ? 12 : 8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw snap indicator
+        const boxX = snapped.x * zoom + 20, boxY = snapped.y * zoom - 40;
+        ctx.fillStyle = snappedToPoint ? '#e11d48' : (isStraight ? '#00ff00' : '#ff0000');
+        ctx.fillRect(boxX, boxY, 140, 30);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(snappedToPoint ? '⚡ SNAP TO POINT!' : (isStraight ? '✓ STRAIGHT!' : '✗ NOT STRAIGHT'), boxX + 8, boxY + 20);
+      }
+    }
+    
+    function onUp(e) {
+      if (isDraggingLabel) { isDraggingLabel = false; return; }
+      if (isDraggingMeasurement) { 
+        isDraggingMeasurement = false; 
+        draggingMeasurementRef = null;
+        setStatus('Measurement label repositioned. Click to edit value.');
+        return; 
+      }
+      if (isDraggingPoint) {
+        isDraggingPoint = false;
+        selectedPoint = null;
+        render();
+        setStatus('Point moved. Click another point to adjust, or continue drawing.');
+        return;
+      }
+      if (currentTool === 'line' && isDrawing && startPoint) {
+        const pos = getPos(e);
+        updateSnapPoints();
+        
+        // Smart snap endpoint: first try point snap, then angle snap
+        let endPos;
+        const pointSnap = findNearestSnapPoint(pos);
+        if (pointSnap) {
+          endPos = { x: pointSnap.x, y: pointSnap.y };
+          setStatus('⚡ Line snapped to existing point!');
+        } else {
+          endPos = snapOn ? snapAngle(startPoint, pos) : pos;
+        }
+        
+        if (calcDist(startPoint, endPos) > 10) {
+          saveState();
+          elements.push({ type: 'line', x1: startPoint.x, y1: startPoint.y, x2: endPos.x, y2: endPos.y, edgeType: currentEdgeType, lineStyle: currentLineStyle });
+        }
+        isDrawing = false;
+        startPoint = null;
+        render();
+      }
+    }
+    
+    function finishArea() {
+      if (currentPoints.length < 3) { currentPoints = []; render(); return; }
+      const edges = [];
+      for (let i = 0; i < currentPoints.length; i++) {
+        edges.push({ p1: currentPoints[i], p2: currentPoints[(i + 1) % currentPoints.length], type: currentEdgeType, lineStyle: currentLineStyle });
+      }
+      saveState();
+      areas.push({ points: [...currentPoints], edges, pitch: currentPitch });
+      currentPoints = [];
+      render();
+      setStatus('Area complete! Draw more or use SELECT to edit measurements.');
+    }
+    
+    function findClickedEdge(pos) {
+      const threshold = 15;
+      for (let a = 0; a < areas.length; a++) {
+        for (let e = 0; e < areas[a].edges.length; e++) {
+          const edge = areas[a].edges[e];
+          if (pointToLineDist(pos, edge.p1, edge.p2) < threshold) return { type: 'area', areaIdx: a, edgeIdx: e, edge };
+        }
+      }
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'line') {
+          const line = elements[i];
+          if (pointToLineDist(pos, {x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}) < threshold) return { type: 'line', lineIdx: i, edge: line };
+        }
+      }
+      return null;
+    }
+    
+    function pointToLineDist(point, p1, p2) {
+      const A = point.x - p1.x, B = point.y - p1.y, C = p2.x - p1.x, D = p2.y - p1.y;
+      const dot = A * C + B * D, lenSq = C * C + D * D;
+      let param = lenSq ? dot / lenSq : -1;
+      let xx, yy;
+      if (param < 0) { xx = p1.x; yy = p1.y; } else if (param > 1) { xx = p2.x; yy = p2.y; } else { xx = p1.x + param * C; yy = p1.y + param * D; }
+      return Math.sqrt((point.x - xx) ** 2 + (point.y - yy) ** 2);
+    }
+    
+    function showEdgeInput(clicked, pos) {
+      const input = document.getElementById('edgeInput');
+      const lengthField = document.getElementById('edgeLength');
+      // Start blank so user can just type
+      lengthField.value = '';
+      lengthField.placeholder = '0';
+      // Get current text size for this edge
+      if (clicked.type === 'area') {
+        currentEditTextSize = clicked.edge.textSize || textSize;
+      } else {
+        currentEditTextSize = clicked.edge.textSize || textSize;
+      }
+      document.getElementById('edgeTextSizeDisplay').textContent = currentEditTextSize;
+      input.style.display = 'block';
+      // Position near but not on top of click
+      input.style.left = (pos.x * zoom + 70) + 'px';
+      input.style.top = (pos.y * zoom - 30) + 'px';
+      // Use setTimeout to ensure focus works after DOM update
+      setTimeout(() => {
+        lengthField.focus();
+      }, 10);
+      setStatus('Type measurement and press Enter');
+    }
+    
+    function adjustEdgeTextSize(delta) {
+      currentEditTextSize = Math.max(10, Math.min(40, currentEditTextSize + delta));
+      document.getElementById('edgeTextSizeDisplay').textContent = currentEditTextSize;
+      // Apply immediately so user can see
+      if (editingEdge) {
+        if (editingEdge.type === 'area') {
+          areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].textSize = currentEditTextSize;
+        } else {
+          elements[editingEdge.lineIdx].textSize = currentEditTextSize;
+        }
+        render();
+      }
+    }
+    
+    function confirmEdge() {
+      const val = parseFloat(document.getElementById('edgeLength').value);
+      if (editingEdge) {
+        saveState();
+        // Save text size regardless of whether measurement was entered
+        if (editingEdge.type === 'area') {
+          areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].textSize = currentEditTextSize;
+          areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].hidden = false;  // Show if was hidden
+          if (!isNaN(val) && val > 0) {
+            areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].manualLength = val;
+          }
+        } else {
+          elements[editingEdge.lineIdx].textSize = currentEditTextSize;
+          elements[editingEdge.lineIdx].hidden = false;  // Show if was hidden
+          if (!isNaN(val) && val > 0) {
+            elements[editingEdge.lineIdx].manualLength = val;
+          }
+        }
+        render();
+        setStatus(val > 0 ? `Saved: ${val} FT` : 'Size updated');
+      }
+      cancelInput();
+    }
+    
+    function hideEdgeMeasurement() {
+      if (editingEdge) {
+        saveState();
+        if (editingEdge.type === 'area') {
+          areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].hidden = true;
+        } else {
+          elements[editingEdge.lineIdx].hidden = true;
+        }
+        render();
+        setStatus('Measurement hidden. Click line to show again.');
+      }
+      cancelInput();
+    }
+    
+    function showLabelInput(pos) {
+      const input = document.getElementById('labelInput');
+      input.style.display = 'block';
+      input.style.left = (pos.x * zoom + 60) + 'px';
+      input.style.top = (pos.y * zoom + 50) + 'px';
+      document.getElementById('labelText').value = '';
+      currentEditTextSize = textSize;  // Use default for new labels
+      currentEditRotation = 0;  // Reset rotation for new labels
+      document.getElementById('labelTextSizeDisplay').textContent = currentEditTextSize;
+      document.getElementById('labelRotationDisplay').textContent = currentEditRotation + '°';
+      setTimeout(() => {
+        document.getElementById('labelText').focus();
+      }, 10);
+    }
+    
+    function adjustLabelRotation(delta) {
+      currentEditRotation = (currentEditRotation + delta) % 360;
+      document.getElementById('labelRotationDisplay').textContent = currentEditRotation + '°';
+      // If editing existing label, apply immediately
+      if (editingLabelIdx !== null) {
+        const labels = elements.filter(e => e.type === 'label');
+        if (editingLabelIdx < labels.length) {
+          let count = 0;
+          for (let i = 0; i < elements.length; i++) {
+            if (elements[i].type === 'label') {
+              if (count === editingLabelIdx) {
+                elements[i].rotation = currentEditRotation;
+                break;
+              }
+              count++;
+            }
+          }
+          render();
+        }
+      }
+    }
+    
+    function setLabelRotation(angle) {
+      currentEditRotation = angle;
+      document.getElementById('labelRotationDisplay').textContent = currentEditRotation + '°';
+      // If editing existing label, apply immediately
+      if (editingLabelIdx !== null) {
+        const labels = elements.filter(e => e.type === 'label');
+        if (editingLabelIdx < labels.length) {
+          let count = 0;
+          for (let i = 0; i < elements.length; i++) {
+            if (elements[i].type === 'label') {
+              if (count === editingLabelIdx) {
+                elements[i].rotation = currentEditRotation;
+                break;
+              }
+              count++;
+            }
+          }
+          render();
+        }
+      }
+    }
+    
+    function adjustLabelTextSize(delta) {
+      currentEditTextSize = Math.max(10, Math.min(40, currentEditTextSize + delta));
+      document.getElementById('labelTextSizeDisplay').textContent = currentEditTextSize;
+      // If editing existing label, apply immediately
+      if (editingLabelIdx !== null) {
+        const labels = elements.filter(e => e.type === 'label');
+        if (editingLabelIdx < labels.length) {
+          let count = 0;
+          for (let i = 0; i < elements.length; i++) {
+            if (elements[i].type === 'label') {
+              if (count === editingLabelIdx) {
+                elements[i].textSize = currentEditTextSize;
+                break;
+              }
+              count++;
+            }
+          }
+          render();
+        }
+      }
+    }
+    
+    function resizeSelectedLabel(delta) {
+      if (selectedLabel === null) return;
+      const labels = elements.filter(e => e.type === 'label');
+      if (selectedLabel >= labels.length) return;
+      let count = 0, actualIdx = -1;
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'label') {
+          if (count === selectedLabel) { actualIdx = i; break; }
+          count++;
+        }
+      }
+      if (actualIdx >= 0) {
+        elements[actualIdx].textSize = Math.max(10, Math.min(40, (elements[actualIdx].textSize || textSize) + delta));
+        document.getElementById('selectedLabelSize').textContent = elements[actualIdx].textSize + 'px';
+        render();
+        setStatus(`Text size: ${elements[actualIdx].textSize}px`);
+      }
+    }
+    
+    function rotateSelectedLabel(delta) {
+      if (selectedLabel === null) return;
+      const labels = elements.filter(e => e.type === 'label');
+      if (selectedLabel >= labels.length) return;
+      let count = 0, actualIdx = -1;
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'label') {
+          if (count === selectedLabel) { actualIdx = i; break; }
+          count++;
+        }
+      }
+      if (actualIdx >= 0) {
+        elements[actualIdx].rotation = ((elements[actualIdx].rotation || 0) + delta) % 360;
+        document.getElementById('selectedLabelRotation').textContent = elements[actualIdx].rotation + '°';
+        render();
+        setStatus(`Rotated to ${elements[actualIdx].rotation}°`);
+      }
+    }
+    
+    function setSelectedLabelRotation(angle) {
+      if (selectedLabel === null) return;
+      const labels = elements.filter(e => e.type === 'label');
+      if (selectedLabel >= labels.length) return;
+      let count = 0, actualIdx = -1;
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'label') {
+          if (count === selectedLabel) { actualIdx = i; break; }
+          count++;
+        }
+      }
+      if (actualIdx >= 0) {
+        elements[actualIdx].rotation = angle;
+        document.getElementById('selectedLabelRotation').textContent = elements[actualIdx].rotation + '°';
+        render();
+        setStatus(`Rotation set to ${angle}°`);
+      }
+    }
+    
+    function updateSelectedLabelPanel() {
+      const panel = document.getElementById('selectedLabelControls');
+      if (selectedLabel !== null) {
+        const labels = elements.filter(e => e.type === 'label');
+        if (selectedLabel < labels.length) {
+          const lbl = labels[selectedLabel];
+          document.getElementById('selectedLabelSize').textContent = (lbl.textSize || textSize) + 'px';
+          document.getElementById('selectedLabelRotation').textContent = (lbl.rotation || 0) + '°';
+          panel.style.display = 'block';
+          return;
+        }
+      }
+      panel.style.display = 'none';
+    }
+    
+    function editLabelText(labelIdx, pos) {
+      // Find the actual label in elements array
+      const labels = elements.filter(e => e.type === 'label');
+      if (labelIdx >= labels.length) return;
+      const label = labels[labelIdx];
+      editingLabelIdx = labelIdx;
+      currentEditTextSize = label.textSize || textSize;
+      currentEditRotation = label.rotation || 0;
+      
+      const input = document.getElementById('labelInput');
+      input.style.display = 'block';
+      input.style.left = (label.x * zoom + 70) + 'px';
+      input.style.top = (label.y * zoom - 30) + 'px';
+      document.getElementById('labelText').value = label.text;
+      document.getElementById('labelTextSizeDisplay').textContent = currentEditTextSize;
+      document.getElementById('labelRotationDisplay').textContent = currentEditRotation + '°';
+      setTimeout(() => {
+        document.getElementById('labelText').focus();
+        document.getElementById('labelText').select();
+      }, 10);
+      setStatus('Edit text, adjust size/angle, press Enter to save');
+    }
+    
+    function confirmLabel() {
+      const text = document.getElementById('labelText').value.trim();
+      if (text) {
+        if (editingLabelIdx !== null) {
+          // Editing existing label
+          const labels = elements.filter(e => e.type === 'label');
+          if (editingLabelIdx < labels.length) {
+            let count = 0;
+            for (let i = 0; i < elements.length; i++) {
+              if (elements[i].type === 'label') {
+                if (count === editingLabelIdx) {
+                  elements[i].text = text;
+                  elements[i].textSize = currentEditTextSize;
+                  elements[i].rotation = currentEditRotation;
+                  break;
+                }
+                count++;
+              }
+            }
+          }
+          editingLabelIdx = null;
+          setStatus('Label updated');
+        } else if (labelPos) {
+          // New label
+          saveState();
+          elements.push({ type: 'label', x: labelPos.x, y: labelPos.y, text, rotation: currentEditRotation, textSize: currentEditTextSize });
+        }
+        render();
+      }
+      cancelInput();
+    }
+    
+    function cancelInput() {
+      document.getElementById('labelInput').style.display = 'none';
+      document.getElementById('edgeInput').style.display = 'none';
+      editingEdge = null;
+      labelPos = null;
+      editingLabelIdx = null;
+    }
+    
+    function saveState() {
+      // Save current state to history
+      const state = {
+        areas: JSON.parse(JSON.stringify(areas)),
+        elements: JSON.parse(JSON.stringify(elements))
+      };
+      history.push(state);
+      if (history.length > MAX_HISTORY) history.shift();
+    }
+    
+    function undo() {
+      if (currentPoints.length > 0) {
+        // If drawing an area, just remove last point
+        currentPoints.pop();
+        render();
+        setStatus('Removed last point. Press Escape to cancel shape.');
+        return;
+      }
+      if (history.length > 0) {
+        const state = history.pop();
+        areas = state.areas;
+        elements = state.elements;
+        render();
+        setStatus('Undo successful');
+      } else {
+        setStatus('Nothing to undo');
+      }
+    }
+    
+    function finishCurrentShape() {
+      // If drawing an area with 3+ points, complete it
+      if (currentPoints.length >= 3) {
+        const edges = [];
+        for (let i = 0; i < currentPoints.length; i++) {
+          const p1 = currentPoints[i];
+          const p2 = currentPoints[(i + 1) % currentPoints.length];
+          edges.push({ p1, p2, type: currentEdgeType, lineStyle: currentLineStyle });
+        }
+        saveState();
+        areas.push({ points: [...currentPoints], edges, pitch: currentPitch });
+        currentPoints = [];
+        render();
+        setStatus('✓ SHAPE COMPLETED! Click to start new shape.');
+        return;
+      }
+      
+      // If drawing an area with 1-2 points, cancel it
+      if (currentPoints.length > 0) {
+        currentPoints = [];
+        render();
+        setStatus('Shape cancelled (need 3+ points). Click to start new shape.');
+        return;
+      }
+      
+      // If in line drawing mode, stop it
+      if (isDrawing) {
+        isDrawing = false;
+        startPoint = null;
+        render();
+        setStatus('Line cancelled. Click to start new line.');
+        return;
+      }
+      
+      // Nothing active - just confirm ready
+      setStatus('✓ Ready! Click to start drawing.');
+      render();
+    }
+    
+    function clearAll() { if (confirm('Clear all drawings?')) { saveState(); elements = []; areas = []; currentPoints = []; history = []; render(); } }
+    function setStatus(msg) { document.getElementById('statusText').textContent = msg; }
+    
+    document.getElementById('edgeLength').addEventListener('keydown', e => { if (e.key === 'Enter') confirmEdge(); if (e.key === 'Escape') cancelInput(); });
+    document.getElementById('labelText').addEventListener('keydown', e => { if (e.key === 'Enter') confirmLabel(); if (e.key === 'Escape') cancelInput(); });
+    
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT') return;
+      if (selectedLabel !== null) {
+        // R key to rotate
+        if (e.key === 'r' || e.key === 'R') { 
+          rotateSelectedLabel(15);
+          return; 
+        }
+        // Delete key
+        if (e.key === 'Delete' || e.key === 'Backspace') { 
+          let count = 0, actualIdx = -1;
+          for (let i = 0; i < elements.length; i++) { 
+            if (elements[i].type === 'label') { 
+              if (count === selectedLabel) { actualIdx = i; break; } 
+              count++; 
+            } 
+          }
+          if (actualIdx >= 0) {
+            saveState();
+            elements.splice(actualIdx, 1); 
+            selectedLabel = null; 
+            render(); 
+            setStatus('Label deleted.'); 
+          }
+          return; 
+        }
+        // + key to enlarge
+        if (e.key === '=' || e.key === '+') { 
+          resizeSelectedLabel(2);
+          return; 
+        }
+        // - key to shrink
+        if (e.key === '-' || e.key === '_') { 
+          resizeSelectedLabel(-2);
+          return; 
+        }
+      }
+      if (e.key === 'a') setTool('area');
+      if (e.key === 'l') setTool('line');
+      if (e.key === 'v') setTool('select');
+      if (e.key === 'f' || e.key === 'F' || e.key === 'Enter') { 
+        e.preventDefault();
+        finishCurrentShape(); 
+      }
+      if (e.key === 'Escape') { 
+        if (currentPoints.length > 0) {
+          currentPoints = [];
+          setStatus('Shape cancelled. Click to start new shape.');
+        }
+        selectedLabel = null; 
+        closeHelp(); 
+        cancelInput(); 
+        render(); 
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+    });
+    
+    document.getElementById('scaleInput').addEventListener('change', render);
+    
+    function generateReport() {
+      // Render clean version WITHOUT background image
+      const printCanvas = document.createElement('canvas');
+      printCanvas.width = canvas.width;
+      printCanvas.height = canvas.height;
+      const pctx = printCanvas.getContext('2d');
+      
+      // White background
+      pctx.fillStyle = '#ffffff';
+      pctx.fillRect(0, 0, printCanvas.width, printCanvas.height);
+      
+      // Draw professional info box
+      const showInfo = document.getElementById('showInfoOverlay').checked;
+      const name = document.getElementById('propName').value;
+      const address = document.getElementById('propAddress').value;
+      const dateVal = document.getElementById('propDate').value;
+      let formattedDate = '';
+      if (dateVal) {
+        const d = new Date(dateVal);
+        formattedDate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+      }
+      
+      // Always show info box on print
+      let lineCount = 1;
+      if (name) lineCount++;
+      if (address) lineCount++;
+      if (formattedDate) lineCount++;
+      const boxHeight = 40 + (lineCount * 20);
+      
+      pctx.fillStyle = '#ffffff';
+      pctx.fillRect(10, 10, 300, boxHeight);
+      pctx.strokeStyle = '#1e3a5f';
+      pctx.lineWidth = 3;
+      pctx.strokeRect(10, 10, 300, boxHeight);
+      
+      // Header
+      pctx.fillStyle = '#c1121f';
+      pctx.font = 'bold 15px Arial';
+      pctx.textAlign = 'left';
+      pctx.fillText('ALTA CALIFORNIA CONSTRUCTION', 20, 32);
+      pctx.strokeStyle = '#c1121f';
+      pctx.lineWidth = 2;
+      pctx.beginPath();
+      pctx.moveTo(20, 40);
+      pctx.lineTo(290, 40);
+      pctx.stroke();
+      
+      // Info lines
+      pctx.fillStyle = '#000';
+      pctx.font = '13px Arial';
+      let yPos = 60;
+      if (name) { pctx.fillText('Customer: ' + name, 20, yPos); yPos += 20; }
+      if (address) { pctx.fillText('Address: ' + address, 20, yPos); yPos += 20; }
+      if (formattedDate) { pctx.fillText('Date: ' + formattedDate, 20, yPos); }
+      
+      // Draw areas
+      areas.forEach((area, idx) => {
+        const color = areaColors[idx % areaColors.length];
+        pctx.fillStyle = color + '20';
+        pctx.beginPath();
+        area.points.forEach((p, i) => i === 0 ? pctx.moveTo(p.x * zoom, p.y * zoom) : pctx.lineTo(p.x * zoom, p.y * zoom));
+        pctx.closePath();
+        pctx.fill();
+        
+        area.edges.forEach(edge => {
+          pctx.strokeStyle = getEdgeColor(edge.type);
+          pctx.lineWidth = 3;
+          if (edge.lineStyle === 'dashed') pctx.setLineDash([10, 6]);
+          else if (edge.lineStyle === 'dotted') pctx.setLineDash([4, 6]);
+          else pctx.setLineDash([]);
+          pctx.beginPath();
+          pctx.moveTo(edge.p1.x * zoom, edge.p1.y * zoom);
+          pctx.lineTo(edge.p2.x * zoom, edge.p2.y * zoom);
+          pctx.stroke();
+          pctx.setLineDash([]);
+          
+          // Skip hidden measurements
+          if (!edge.hidden) {
+            const offsetX = edge.labelOffsetX || 0;
+            const offsetY = edge.labelOffsetY || 0;
+            const midX = ((edge.p1.x + edge.p2.x) / 2 + offsetX) * zoom;
+            const midY = ((edge.p1.y + edge.p2.y) / 2 + offsetY) * zoom;
+            const feet = edge.manualLength !== undefined ? edge.manualLength : pixelsToFeet(calcDist(edge.p1, edge.p2));
+            const edgeTextSize = edge.textSize || textSize;
+            const boxW = edgeTextSize * 4.5;
+            const boxH = edgeTextSize * 2;
+            pctx.fillStyle = '#16a34a';
+            pctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            pctx.strokeStyle = '#166534';
+            pctx.lineWidth = 2;
+            pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            pctx.fillStyle = '#fff';
+            pctx.font = 'bold ' + edgeTextSize + 'px Arial';
+            pctx.textAlign = 'center';
+            pctx.fillText(feet.toFixed(1) + "'", midX, midY + edgeTextSize/3);
+          }
+        });
+        
+        area.points.forEach(p => {
+          pctx.fillStyle = '#333';
+          pctx.beginPath();
+          pctx.arc(p.x * zoom, p.y * zoom, 4, 0, Math.PI * 2);
+          pctx.fill();
+        });
+      });
+      
+      elements.filter(e => e.type === 'line').forEach(line => {
+        pctx.strokeStyle = getEdgeColor(line.edgeType);
+        pctx.lineWidth = 3;
+        if (line.lineStyle === 'dashed') pctx.setLineDash([10, 6]);
+        else if (line.lineStyle === 'dotted') pctx.setLineDash([4, 6]);
+        else pctx.setLineDash([]);
+        pctx.beginPath();
+        pctx.moveTo(line.x1 * zoom, line.y1 * zoom);
+        pctx.lineTo(line.x2 * zoom, line.y2 * zoom);
+        pctx.stroke();
+        pctx.setLineDash([]);
+        
+        // Skip hidden measurements
+        if (!line.hidden) {
+          const offsetX = line.labelOffsetX || 0;
+          const offsetY = line.labelOffsetY || 0;
+          const midX = ((line.x1 + line.x2) / 2 + offsetX) * zoom;
+          const midY = ((line.y1 + line.y2) / 2 + offsetY) * zoom;
+          const feet = line.manualLength !== undefined ? line.manualLength : pixelsToFeet(calcDist({x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}));
+          const lineTextSize = line.textSize || textSize;
+          const boxW = lineTextSize * 4.5;
+          const boxH = lineTextSize * 2;
+          pctx.fillStyle = '#16a34a';
+          pctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          pctx.strokeStyle = '#166534';
+          pctx.lineWidth = 2;
+          pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          pctx.fillStyle = '#fff';
+          pctx.font = 'bold ' + lineTextSize + 'px Arial';
+          pctx.textAlign = 'center';
+          pctx.fillText(feet.toFixed(1) + "'", midX, midY + lineTextSize/3);
+        }
+      });
+      
+      elements.filter(e => e.type === 'label').forEach((lbl) => {
+        pctx.save();
+        pctx.translate(lbl.x * zoom, lbl.y * zoom);
+        pctx.rotate((lbl.rotation || 0) * Math.PI / 180);
+        const lblTextSize = lbl.textSize || textSize;
+        pctx.font = 'bold ' + lblTextSize + 'px Arial';
+        pctx.fillStyle = '#000';
+        pctx.textAlign = 'left';
+        pctx.fillText(lbl.text, 0, 0);
+        pctx.restore();
+      });
+      
+      const img = printCanvas.toDataURL();
+      const info = { name: document.getElementById('propName').value || 'N/A', address: document.getElementById('propAddress').value || 'N/A', date: document.getElementById('propDate').value };
+      let totalArea = 0, totalLinear = 0;
+      areas.forEach(a => { totalArea += calcAreaSqft(a); a.edges.forEach(e => totalLinear += e.manualLength || pixelsToFeet(calcDist(e.p1, e.p2))); });
+      elements.filter(e => e.type === 'line').forEach(l => { totalLinear += l.manualLength || pixelsToFeet(calcDist({x:l.x1,y:l.y1},{x:l.x2,y:l.y2})); });
+      const html = `<!DOCTYPE html><html><head><title>Report</title><style>body{font-family:Arial;max-width:800px;margin:auto;padding:20px}img{max-width:100%}.box{display:inline-block;background:#f5f5f5;padding:20px 40px;margin:10px;text-align:center;border-radius:8px}.box .num{font-size:36px;font-weight:bold;color:#16a34a}</style></head><body><h1>ALTA CALIFORNIA CONSTRUCTION</h1><h2>Property Measurement Report</h2><p><b>Customer:</b> ${info.name}<br><b>Address:</b> ${info.address}<br><b>Date:</b> ${info.date}</p><img src="${img}"><div class="box"><div class="num">${totalArea.toFixed(0)}</div>SQ FT</div><div class="box"><div class="num">${totalLinear.toFixed(0)}</div>LINEAR FT</div><br><br><p><b>PM Signature:</b> _____________________ <b>Date:</b> ___________</p></body></html>`;
+      const blob = new Blob([html], {type: 'text/html'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'property-report.html'; a.click();
+    }
+    
+    function printNow() {
+      // Render clean version WITHOUT background image
+      const printCanvas = document.createElement('canvas');
+      printCanvas.width = canvas.width;
+      printCanvas.height = canvas.height;
+      const pctx = printCanvas.getContext('2d');
+      
+      // White background
+      pctx.fillStyle = '#ffffff';
+      pctx.fillRect(0, 0, printCanvas.width, printCanvas.height);
+      
+      // Draw professional info box - ALWAYS show on print
+      const name = document.getElementById('propName').value;
+      const address = document.getElementById('propAddress').value;
+      const dateVal = document.getElementById('propDate').value;
+      let formattedDate = '';
+      if (dateVal) {
+        const d = new Date(dateVal);
+        formattedDate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+      }
+      
+      let lineCount = 1;
+      if (name) lineCount++;
+      if (address) lineCount++;
+      if (formattedDate) lineCount++;
+      const boxHeight = 40 + (lineCount * 20);
+      
+      pctx.fillStyle = '#ffffff';
+      pctx.fillRect(10, 10, 300, boxHeight);
+      pctx.strokeStyle = '#1e3a5f';
+      pctx.lineWidth = 3;
+      pctx.strokeRect(10, 10, 300, boxHeight);
+      
+      // Header
+      pctx.fillStyle = '#c1121f';
+      pctx.font = 'bold 15px Arial';
+      pctx.textAlign = 'left';
+      pctx.fillText('ALTA CALIFORNIA CONSTRUCTION', 20, 32);
+      pctx.strokeStyle = '#c1121f';
+      pctx.lineWidth = 2;
+      pctx.beginPath();
+      pctx.moveTo(20, 40);
+      pctx.lineTo(290, 40);
+      pctx.stroke();
+      
+      // Info lines
+      pctx.fillStyle = '#000';
+      pctx.font = '13px Arial';
+      let yPos = 60;
+      if (name) { pctx.fillText('Customer: ' + name, 20, yPos); yPos += 20; }
+      if (address) { pctx.fillText('Address: ' + address, 20, yPos); yPos += 20; }
+      if (formattedDate) { pctx.fillText('Date: ' + formattedDate, 20, yPos); }
+      
+      // Draw areas (no background image)
+      areas.forEach((area, idx) => {
+        const color = areaColors[idx % areaColors.length];
+        pctx.fillStyle = color + '20';
+        pctx.beginPath();
+        area.points.forEach((p, i) => i === 0 ? pctx.moveTo(p.x * zoom, p.y * zoom) : pctx.lineTo(p.x * zoom, p.y * zoom));
+        pctx.closePath();
+        pctx.fill();
+        
+        area.edges.forEach(edge => {
+          pctx.strokeStyle = getEdgeColor(edge.type);
+          pctx.lineWidth = 3;
+          if (edge.lineStyle === 'dashed') pctx.setLineDash([10, 6]);
+          else if (edge.lineStyle === 'dotted') pctx.setLineDash([4, 6]);
+          else pctx.setLineDash([]);
+          pctx.beginPath();
+          pctx.moveTo(edge.p1.x * zoom, edge.p1.y * zoom);
+          pctx.lineTo(edge.p2.x * zoom, edge.p2.y * zoom);
+          pctx.stroke();
+          pctx.setLineDash([]);
+          
+          // Skip hidden measurements
+          if (!edge.hidden) {
+            // Draw measurements
+            const offsetX = edge.labelOffsetX || 0;
+            const offsetY = edge.labelOffsetY || 0;
+            const midX = ((edge.p1.x + edge.p2.x) / 2 + offsetX) * zoom;
+            const midY = ((edge.p1.y + edge.p2.y) / 2 + offsetY) * zoom;
+            const feet = edge.manualLength !== undefined ? edge.manualLength : pixelsToFeet(calcDist(edge.p1, edge.p2));
+            const edgeTextSize = edge.textSize || textSize;
+            const boxW = edgeTextSize * 4.5;
+            const boxH = edgeTextSize * 2;
+            pctx.fillStyle = '#16a34a';
+            pctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            pctx.strokeStyle = '#166534';
+            pctx.lineWidth = 2;
+          pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          pctx.fillStyle = '#fff';
+          pctx.font = 'bold ' + edgeTextSize + 'px Arial';
+          pctx.textAlign = 'center';
+          pctx.fillText(feet.toFixed(1) + "'", midX, midY + edgeTextSize/3);
+          }
+        });
+        
+        // Corner dots
+        area.points.forEach(p => {
+          pctx.fillStyle = '#333';
+          pctx.beginPath();
+          pctx.arc(p.x * zoom, p.y * zoom, 4, 0, Math.PI * 2);
+          pctx.fill();
+        });
+      });
+      
+      // Draw standalone lines
+      elements.filter(e => e.type === 'line').forEach(line => {
+        pctx.strokeStyle = getEdgeColor(line.edgeType);
+        pctx.lineWidth = 3;
+        if (line.lineStyle === 'dashed') pctx.setLineDash([10, 6]);
+        else if (line.lineStyle === 'dotted') pctx.setLineDash([4, 6]);
+        else pctx.setLineDash([]);
+        pctx.beginPath();
+        pctx.moveTo(line.x1 * zoom, line.y1 * zoom);
+        pctx.lineTo(line.x2 * zoom, line.y2 * zoom);
+        pctx.stroke();
+        pctx.setLineDash([]);
+        
+        // Skip hidden measurements
+        if (!line.hidden) {
+          const offsetX = line.labelOffsetX || 0;
+          const offsetY = line.labelOffsetY || 0;
+          const midX = ((line.x1 + line.x2) / 2 + offsetX) * zoom;
+          const midY = ((line.y1 + line.y2) / 2 + offsetY) * zoom;
+          const feet = line.manualLength !== undefined ? line.manualLength : pixelsToFeet(calcDist({x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}));
+          const lineTextSize = line.textSize || textSize;
+          const boxW = lineTextSize * 4.5;
+          const boxH = lineTextSize * 2;
+          pctx.fillStyle = '#16a34a';
+          pctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          pctx.strokeStyle = '#166534';
+          pctx.lineWidth = 2;
+          pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          pctx.fillStyle = '#fff';
+          pctx.font = 'bold ' + lineTextSize + 'px Arial';
+          pctx.textAlign = 'center';
+          pctx.fillText(feet.toFixed(1) + "'", midX, midY + lineTextSize/3);
+        }
+      });
+      
+      // Draw labels
+      elements.filter(e => e.type === 'label').forEach((lbl) => {
+        pctx.save();
+        pctx.translate(lbl.x * zoom, lbl.y * zoom);
+        pctx.rotate((lbl.rotation || 0) * Math.PI / 180);
+        const lblTextSize = lbl.textSize || textSize;
+        pctx.font = 'bold ' + lblTextSize + 'px Arial';
+        pctx.fillStyle = '#000';
+        pctx.textAlign = 'left';
+        pctx.fillText(lbl.text, 0, 0);
+        pctx.restore();
+      });
+      
+      const img = printCanvas.toDataURL();
+      const info = { 
+        name: document.getElementById('propName').value || '____________________', 
+        address: document.getElementById('propAddress').value || '____________________', 
+        date: document.getElementById('propDate').value || new Date().toLocaleDateString()
+      };
+      
+      let totalArea = 0, totalLinear = 0;
+      const byType = {};
+      const types = jobEdgeTypes[currentJob] || [];
+      types.forEach(t => byType[t.id] = 0);
+      
+      areas.forEach(a => { 
+        totalArea += calcAreaSqft(a); 
+        a.edges.forEach(e => {
+          const len = e.manualLength || pixelsToFeet(calcDist(e.p1, e.p2));
+          totalLinear += len;
+          if (byType[e.type] !== undefined) byType[e.type] += len;
+        }); 
+      });
+      elements.filter(e => e.type === 'line').forEach(l => { 
+        const len = l.manualLength || pixelsToFeet(calcDist({x:l.x1,y:l.y1},{x:l.x2,y:l.y2}));
+        totalLinear += len;
+        if (byType[l.edgeType] !== undefined) byType[l.edgeType] += len;
+      });
+      
+      // Build breakdown table
+      let breakdownHTML = types.filter(t => byType[t.id] > 0).map(t => 
+        `<tr><td style="padding:8px;border-bottom:1px solid #ddd;">${t.name}</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;font-weight:bold;">${byType[t.id].toFixed(1)} FT</td></tr>`
+      ).join('');
+      
+      const w = window.open('', '_blank');
+      w.document.write(`<!DOCTYPE html><html><head><title>Property Report - ${info.name}</title><style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #fff; }
+        .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .header-left h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
+        .header-left p { margin: 5px 0 0; font-size: 12px; opacity: 0.8; }
+        .header-right { text-align: right; font-size: 12px; }
+        .header-right p { margin: 3px 0; }
+        .content { padding: 20px 30px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .info-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 12px 15px; }
+        .info-box label { font-size: 10px; text-transform: uppercase; color: #666; display: block; margin-bottom: 4px; }
+        .info-box span { font-size: 14px; font-weight: 600; color: #333; }
+        .diagram-container { border: 2px solid #333; border-radius: 8px; overflow: hidden; margin: 20px 0; background: #fff; }
+        .diagram-container img { display: block; width: 100%; }
+        .totals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+        .total-box { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+        .total-box .number { font-size: 36px; font-weight: bold; }
+        .total-box .label { font-size: 12px; text-transform: uppercase; opacity: 0.9; margin-top: 5px; }
+        .breakdown { margin: 20px 0; }
+        .breakdown h3 { font-size: 14px; text-transform: uppercase; color: #666; margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 5px; }
+        .breakdown table { width: 100%; border-collapse: collapse; }
+        .signature-section { margin-top: 40px; padding-top: 20px; border-top: 2px solid #333; }
+        .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .sig-line { border-bottom: 1px solid #333; height: 40px; margin-bottom: 5px; }
+        .sig-label { font-size: 11px; color: #666; }
+        .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; padding: 15px; border-top: 1px solid #eee; }
+        @media print { 
+          body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          .header { -webkit-print-color-adjust: exact; }
+          .total-box { -webkit-print-color-adjust: exact; }
+        }
+      </style></head><body>
+        <div class="header">
+          <div class="header-left">
+            <h1>ALTA CALIFORNIA CONSTRUCTION</h1>
+            <p>License #1106881 B • Professional Property Measurement Report</p>
+          </div>
+          <div class="header-right">
+            <p><strong>Report Date:</strong> ${info.date}</p>
+            <p><strong>Job Type:</strong> ${currentJob.charAt(0).toUpperCase() + currentJob.slice(1)}</p>
+          </div>
+        </div>
+        
+        <div class="content">
+          <div class="info-grid">
+            <div class="info-box">
+              <label>Customer Name</label>
+              <span>${info.name}</span>
+            </div>
+            <div class="info-box">
+              <label>Property Address</label>
+              <span>${info.address}</span>
+            </div>
+          </div>
+          
+          <div class="diagram-container">
+            <img src="${img}" alt="Property Diagram">
+          </div>
+          
+          <div class="totals-grid">
+            <div class="total-box">
+              <div class="number">${totalArea.toFixed(0)}</div>
+              <div class="label">Total Square Feet</div>
+            </div>
+            <div class="total-box">
+              <div class="number">${totalLinear.toFixed(0)}</div>
+              <div class="label">Total Linear Feet</div>
+            </div>
+            <div class="total-box" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+              <div class="number">${currentPitch}</div>
+              <div class="label">Roof Pitch</div>
+            </div>
+          </div>
+          
+          ${breakdownHTML ? `
+          <div class="breakdown">
+            <h3>Measurement Breakdown</h3>
+            <table>${breakdownHTML}</table>
+          </div>
+          ` : ''}
+          
+          <div class="signature-section">
+            <div class="sig-grid">
+              <div>
+                <div class="sig-line"></div>
+                <div class="sig-label">Project Manager Signature</div>
+              </div>
+              <div>
+                <div class="sig-line"></div>
+                <div class="sig-label">Date</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            Alta California Construction • Torrance, CA • Generated by PropertyMeasure Pro
+          </div>
+        </div>
+        
+        <script>setTimeout(()=>{window.print()},500)<\/script>
+      </body></html>`);
+      w.document.close();
+    }
+  </script>
+</body>
+</html>
