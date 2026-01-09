@@ -369,6 +369,7 @@
       <button class="top-btn" onclick="undo()">↩ Undo</button>
       <button class="top-btn" onclick="finishCurrentShape()" style="background:#f97316;color:#fff;font-weight:bold;padding:8px 16px;">✓ FINISH</button>
       <button class="top-btn" onclick="clearAll()">🗑</button>
+      <button class="top-btn" onclick="saveToPhotos()" style="background:#8b5cf6;color:#fff;">💾 SAVE</button>
       <button class="top-btn primary" onclick="generateReport()">📄 Report</button>
       <button class="top-btn success print-btn" onclick="printNow()">🖨️ PRINT</button>
     </div>
@@ -377,6 +378,7 @@
   <div class="main-container">
     <div class="tools-panel">
       <button class="tool-icon active" id="tool-area" onclick="setTool('area')">⬡<span>Area</span></button>
+      <button class="tool-icon" id="tool-polyline" onclick="setTool('polyline')" style="background:#8b5cf6;">∪<span>Open</span></button>
       <button class="tool-icon" id="tool-line" onclick="setTool('line')">📏<span>Line</span></button>
       <button class="tool-icon" id="tool-label" onclick="setTool('label')">🏷<span>Label</span></button>
       <button class="tool-icon" id="tool-downspout" onclick="setTool('downspout')" style="display:none;background:#0ea5e9;">⬇<span>Downspout</span></button>
@@ -394,7 +396,9 @@
           <div class="upload-icon">📐</div>
           <h2>Upload Property Image</h2>
           <p style="color:#888;margin-bottom:20px;">Aerial photo, satellite, or sketch</p>
-          <label class="upload-btn">📷 Choose Image / Take Photo<input type="file" accept="image/*" capture="environment" onchange="handleUpload(event)"></label>
+          <label class="upload-btn">📷 Choose from Photos<input type="file" accept="image/*" onchange="handleUpload(event)"></label>
+          <label class="upload-btn" style="margin-top:10px;background:#0ea5e9;">📸 Take Photo<input type="file" accept="image/*" capture="environment" onchange="handleUpload(event)"></label>
+          <button class="upload-btn" style="margin-top:10px;background:#16a34a;" onclick="startBlankGrid()">📏 Start with Blank Grid</button>
           <p style="color:#4ade80;margin-top:20px;cursor:pointer;" onclick="showHelp()">📚 New here? Click for Beginner's Guide</p>
         </div>
       </div>
@@ -699,6 +703,7 @@
     const POINT_SNAP_RADIUS = 15;  // Pixels - how close to snap to existing points
     let allSnapPoints = [];  // Cache of all snappable points
     let isDrawing = false, currentPoints = [], startPoint = null;
+    let isDrawingPolyline = false, polylineStartPoint = null;
     let editingEdge = null, labelPos = null, downspoutPos = null;
     let downspoutColor = '#0ea5e9';  // Default downspout color (blue)
     let editingLabelIdx = null;  // Track which label is being edited
@@ -757,6 +762,8 @@
       currentTool = tool;
       currentPoints = [];
       isDrawing = false;
+      isDrawingPolyline = false;
+      polylineStartPoint = null;
       selectedLabel = null;
       selectedDownspout = null;
       isDraggingLabel = false;
@@ -765,7 +772,8 @@
       document.getElementById('tool-' + tool)?.classList.add('active');
       canvas.style.cursor = tool === 'select' ? 'pointer' : 'crosshair';
       
-      if (tool === 'area') setStatus('AREA: Click corners. Double-click or Finish button to complete. Escape to cancel.');
+      if (tool === 'area') setStatus('CLOSED SHAPE: Click corners. Will connect back to start. Use OPEN tool for U/L shapes.');
+      else if (tool === 'polyline') setStatus('OPEN SHAPE: Click to place DOTS. Click ON a dot and DRAG to draw a line from it.');
       else if (tool === 'line') setStatus('LINE: Click and drag. Each line is SEPARATE (not connected).');
       else if (tool === 'select') setStatus('SELECT: Drag ORANGE dots to adjust points. Click measurements to edit.');
       else if (tool === 'label') setStatus('LABEL: Click to add text.');
@@ -774,8 +782,10 @@
     
     function setEdgeType(type) {
       // Finish current shape before changing edge type
-      if (currentPoints.length >= 3) {
+      if (currentTool === 'area' && currentPoints.length >= 3) {
         finishArea();
+      } else if (currentTool === 'polyline' && currentPoints.length >= 2) {
+        finishPolyline();
       } else if (currentPoints.length > 0) {
         currentPoints = [];  // Cancel incomplete shape
       }
@@ -850,6 +860,7 @@
         const img = new Image();
         img.onload = function() {
           bgImage = img;
+          useBlankGrid = false;  // Reset blank grid when image uploaded
           // Adjust for mobile vs desktop
           const isMobile = window.innerWidth <= 900;
           const maxW = isMobile ? window.innerWidth - 20 : window.innerWidth - 380;
@@ -867,6 +878,56 @@
         img.src = ev.target.result;
       };
       reader.readAsDataURL(file);
+    }
+    
+    let useBlankGrid = false;
+    
+    function startBlankGrid() {
+      bgImage = null;
+      useBlankGrid = true;
+      
+      // Legal paper ratio: 8.5" x 14" (width x height)
+      const legalRatio = 8.5 / 14;  // 0.607
+      
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
+      
+      let maxW, maxH;
+      
+      if (screenW <= 500) {
+        // iPhone - use most of screen, account for UI
+        maxW = screenW - 20;
+        maxH = screenH - 280;
+      } else if (screenW <= 1024) {
+        // iPad/Tablet - larger canvas
+        maxW = screenW - 40;
+        maxH = screenH - 200;
+      } else {
+        // Desktop - account for side panel
+        maxW = screenW - 400;
+        maxH = screenH - 120;
+      }
+      
+      // Calculate dimensions maintaining legal paper ratio
+      // Try fitting by height first
+      let h = maxH;
+      let w = h * legalRatio;
+      
+      // If too wide, fit by width instead
+      if (w > maxW) {
+        w = maxW;
+        h = w / legalRatio;
+      }
+      
+      canvasW = Math.round(w);
+      canvasH = Math.round(h);
+      
+      updateCanvasSize();
+      document.getElementById('uploadOverlay').style.display = 'none';
+      document.getElementById('canvasWrapper').style.display = 'block';
+      updateInfoOverlay();
+      render();
+      setStatus('📄 Legal size grid ready (8.5" x 14"). Draw your measurements!');
     }
     
     function updateCanvasSize() {
@@ -960,13 +1021,55 @@
     
     function render() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#e5e5e5';
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       if (bgImage) {
         ctx.globalAlpha = bgOpacity;
         ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
         ctx.globalAlpha = 1;
+      } else if (useBlankGrid) {
+        // Draw legal paper style grid
+        // Major grid lines (1" equivalent)
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+        const majorGrid = Math.min(canvas.width, canvas.height) / 14;  // 14 inches on legal
+        for (let x = 0; x <= canvas.width; x += majorGrid) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= canvas.height; y += majorGrid) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
+        // Minor grid lines (0.25" equivalent)
+        ctx.strokeStyle = '#e8e8e8';
+        ctx.lineWidth = 0.5;
+        const minorGrid = majorGrid / 4;
+        for (let x = 0; x <= canvas.width; x += minorGrid) {
+          if (x % majorGrid !== 0) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+          }
+        }
+        for (let y = 0; y <= canvas.height; y += minorGrid) {
+          if (y % majorGrid !== 0) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+          }
+        }
+        // Draw border
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
       }
       
       // Draw completed areas
@@ -1091,6 +1194,65 @@
         ctx.globalAlpha = 1;  // Reset after each line
       });
       
+      // Draw polylines (open shapes)
+      elements.filter(e => e.type === 'polyline').forEach(poly => {
+        ctx.globalAlpha = lineOpacity;
+        ctx.strokeStyle = getEdgeColor(poly.edgeType);
+        ctx.lineWidth = 3;
+        if (poly.lineStyle === 'dashed') ctx.setLineDash([10, 6]);
+        else if (poly.lineStyle === 'dotted') ctx.setLineDash([4, 6]);
+        else ctx.setLineDash([]);
+        
+        // Draw the connected line segments
+        ctx.beginPath();
+        poly.points.forEach((p, i) => {
+          if (i === 0) ctx.moveTo(p.x * zoom, p.y * zoom);
+          else ctx.lineTo(p.x * zoom, p.y * zoom);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Draw measurements on each segment
+        poly.segments.forEach((seg, segIdx) => {
+          if (!seg.hidden) {
+            const offsetX = seg.labelOffsetX || 0;
+            const offsetY = seg.labelOffsetY || 0;
+            const midX = ((seg.p1.x + seg.p2.x) / 2 + offsetX) * zoom;
+            const midY = ((seg.p1.y + seg.p2.y) / 2 + offsetY) * zoom;
+            const feet = seg.manualLength !== undefined ? seg.manualLength : pixelsToFeet(calcDist(seg.p1, seg.p2));
+            const isManual = seg.manualLength !== undefined;
+            const segTextSize = seg.textSize || textSize;
+            const segTextColor = seg.textColor || textColor;
+            const boxW = segTextSize * 4.5;
+            const boxH = segTextSize * 2;
+            ctx.fillStyle = isManual ? '#16a34a' : '#8b5cf6';  // Purple for polyline segments
+            ctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            ctx.strokeStyle = isManual ? '#22c55e' : '#a78bfa';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            ctx.fillStyle = segTextColor;
+            ctx.font = 'bold ' + segTextSize + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(feet.toFixed(1) + "'", midX, midY + segTextSize/3);
+          }
+        });
+        
+        // Draw points (draggable in select mode)
+        if (currentTool === 'select') {
+          poly.points.forEach(p => {
+            ctx.fillStyle = '#f97316';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(p.x * zoom, p.y * zoom, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          });
+        }
+        
+        ctx.globalAlpha = 1;
+      });
+      
       // Draw labels with rotation
       let labelIdx = 0;
       elements.filter(e => e.type === 'label').forEach((lbl) => {
@@ -1176,7 +1338,7 @@
         dsIdx++;
       });
       
-      // Draw current area points
+      // Draw current area points (closed shape preview)
       if (currentTool === 'area' && currentPoints.length > 0) {
         ctx.strokeStyle = '#2563eb';
         ctx.lineWidth = 2;
@@ -1193,8 +1355,74 @@
         });
       }
       
+      // Draw standalone polypoints (dots)
+      elements.filter(e => e.type === 'polypoint').forEach(pt => {
+        ctx.fillStyle = '#a855f7';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(pt.x * zoom, pt.y * zoom, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      });
+      
+      // Draw polysegments (connected lines)
+      elements.filter(e => e.type === 'polysegment').forEach(seg => {
+        ctx.globalAlpha = lineOpacity;
+        ctx.strokeStyle = getEdgeColor(seg.edgeType || 'default');
+        ctx.lineWidth = 3;
+        if (seg.lineStyle === 'dashed') ctx.setLineDash([10, 6]);
+        else if (seg.lineStyle === 'dotted') ctx.setLineDash([4, 6]);
+        else ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(seg.x1 * zoom, seg.y1 * zoom);
+        ctx.lineTo(seg.x2 * zoom, seg.y2 * zoom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Draw measurement
+        if (!seg.hidden) {
+          const offsetX = seg.labelOffsetX || 0;
+          const offsetY = seg.labelOffsetY || 0;
+          const midX = ((seg.x1 + seg.x2) / 2 + offsetX) * zoom;
+          const midY = ((seg.y1 + seg.y2) / 2 + offsetY) * zoom;
+          const feet = seg.manualLength !== undefined ? seg.manualLength : pixelsToFeet(calcDist({x:seg.x1,y:seg.y1}, {x:seg.x2,y:seg.y2}));
+          const isManual = seg.manualLength !== undefined;
+          const segTextSize = seg.textSize || textSize;
+          const segTextColor = seg.textColor || textColor;
+          const boxW = segTextSize * 4.5;
+          const boxH = segTextSize * 2;
+          ctx.fillStyle = isManual ? '#16a34a' : '#8b5cf6';
+          ctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          ctx.strokeStyle = isManual ? '#22c55e' : '#a78bfa';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          ctx.fillStyle = segTextColor;
+          ctx.font = 'bold ' + segTextSize + 'px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(feet.toFixed(1) + "'", midX, midY + segTextSize/3);
+        }
+        
+        // Draw endpoints
+        if (currentTool === 'select' || currentTool === 'polyline') {
+          ctx.fillStyle = '#a855f7';
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(seg.x1 * zoom, seg.y1 * zoom, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(seg.x2 * zoom, seg.y2 * zoom, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        
+        ctx.globalAlpha = 1;
+      });
+      
       // Draw snap point indicators when drawing mode is active
-      if ((currentTool === 'area' || currentTool === 'line') && snapOn && !isDraggingPoint) {
+      if ((currentTool === 'area' || currentTool === 'line' || currentTool === 'polyline') && snapOn && !isDraggingPoint) {
         updateSnapPoints();
         if (allSnapPoints.length > 0) {
           ctx.globalAlpha = 0.6;
@@ -1250,6 +1478,22 @@
         const len = line.manualLength !== undefined ? line.manualLength : pixelsToFeet(calcDist({x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}));
         totalLinear += len;
         if (byType[line.edgeType] !== undefined) byType[line.edgeType] += len;
+      });
+      
+      // Add polyline measurements
+      elements.filter(e => e.type === 'polyline').forEach(poly => {
+        poly.segments.forEach(seg => {
+          const len = seg.manualLength !== undefined ? seg.manualLength : pixelsToFeet(calcDist(seg.p1, seg.p2));
+          totalLinear += len;
+          if (byType[seg.type] !== undefined) byType[seg.type] += len;
+        });
+      });
+      
+      // Add polysegment measurements (new dot-based system)
+      elements.filter(e => e.type === 'polysegment').forEach(seg => {
+        const len = seg.manualLength !== undefined ? seg.manualLength : pixelsToFeet(calcDist({x:seg.x1,y:seg.y1}, {x:seg.x2,y:seg.y2}));
+        totalLinear += len;
+        if (byType[seg.edgeType] !== undefined) byType[seg.edgeType] += len;
       });
       
       // Add downspouts to linear total
@@ -1373,7 +1617,7 @@
           }
         }
       }
-      // Check standalone lines
+      // Check standalone lines and polysegments
       for (let i = 0; i < elements.length; i++) {
         if (elements[i].type === 'line') {
           const line = elements[i];
@@ -1386,6 +1630,20 @@
           const midY = (line.y1 + line.y2) / 2 + offsetY;
           if (pos.x >= midX - boxW/2 - 5 && pos.x <= midX + boxW/2 + 5 && pos.y >= midY - boxH/2 - 5 && pos.y <= midY + boxH/2 + 5) {
             return { type: 'line', lineIdx: i, edge: line, midX, midY };
+          }
+        }
+        if (elements[i].type === 'polysegment') {
+          const seg = elements[i];
+          if (seg.hidden) continue;
+          const segTextSize = seg.textSize || textSize;
+          const boxW = segTextSize * 4.5;
+          const boxH = segTextSize * 2;
+          const offsetX = seg.labelOffsetX || 0;
+          const offsetY = seg.labelOffsetY || 0;
+          const midX = (seg.x1 + seg.x2) / 2 + offsetX;
+          const midY = (seg.y1 + seg.y2) / 2 + offsetY;
+          if (pos.x >= midX - boxW/2 - 5 && pos.x <= midX + boxW/2 + 5 && pos.y >= midY - boxH/2 - 5 && pos.y <= midY + boxH/2 + 5) {
+            return { type: 'polysegment', segIdx: i, edge: seg, midX, midY };
           }
         }
       }
@@ -1444,8 +1702,61 @@
             return { type: 'line', lineIdx: i, endpoint: 'end', point: {x: line.x2, y: line.y2} };
           }
         }
+        // Check polyline points
+        if (elements[i].type === 'polyline') {
+          const poly = elements[i];
+          for (let p = 0; p < poly.points.length; p++) {
+            const pt = poly.points[p];
+            if (calcDist(pos, pt) < threshold) {
+              return { type: 'polyline', polyIdx: i, pointIdx: p, point: pt };
+            }
+          }
+        }
+        // Check polysegment endpoints
+        if (elements[i].type === 'polysegment') {
+          const seg = elements[i];
+          if (calcDist(pos, {x: seg.x1, y: seg.y1}) < threshold) {
+            return { type: 'polysegment', segIdx: i, endpoint: 'start', point: {x: seg.x1, y: seg.y1} };
+          }
+          if (calcDist(pos, {x: seg.x2, y: seg.y2}) < threshold) {
+            return { type: 'polysegment', segIdx: i, endpoint: 'end', point: {x: seg.x2, y: seg.y2} };
+          }
+        }
+        // Check standalone polypoints
+        if (elements[i].type === 'polypoint') {
+          const pt = elements[i];
+          if (calcDist(pos, {x: pt.x, y: pt.y}) < threshold) {
+            return { type: 'polypoint', idx: i, point: {x: pt.x, y: pt.y} };
+          }
+        }
       }
       
+      return null;
+    }
+    
+    // Find a polypoint or polyline endpoint that was clicked
+    function findPolylinePoint(pos) {
+      const threshold = 15;
+      
+      // Check standalone polypoints
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'polypoint') {
+          const pt = elements[i];
+          if (calcDist(pos, {x: pt.x, y: pt.y}) < threshold) {
+            return { type: 'polypoint', idx: i, x: pt.x, y: pt.y };
+          }
+        }
+        // Check polysegment endpoints
+        if (elements[i].type === 'polysegment') {
+          const seg = elements[i];
+          if (calcDist(pos, {x: seg.x1, y: seg.y1}) < threshold) {
+            return { type: 'polysegment', idx: i, endpoint: 'start', x: seg.x1, y: seg.y1 };
+          }
+          if (calcDist(pos, {x: seg.x2, y: seg.y2}) < threshold) {
+            return { type: 'polysegment', idx: i, endpoint: 'end', x: seg.x2, y: seg.y2 };
+          }
+        }
+      }
       return null;
     }
     
@@ -1551,6 +1862,41 @@
         return;
       }
       
+      if (currentTool === 'polyline') {
+        updateSnapPoints();
+        
+        // Check if clicking on an existing polyline point to START a line from it
+        const clickedPolyPoint = findPolylinePoint(pos);
+        if (clickedPolyPoint) {
+          // Start drawing a line FROM this existing point
+          polylineStartPoint = clickedPolyPoint;
+          isDrawingPolyline = true;
+          setStatus('Drag to connect. Release to place endpoint.');
+          return;
+        }
+        
+        // Otherwise, place a new standalone dot
+        let snapPos = pos;
+        const pointSnap = findNearestSnapPoint(pos);
+        if (pointSnap) {
+          snapPos = { x: pointSnap.x, y: pointSnap.y };
+          setStatus('⚡ Dot placed at snap point! Click on it to draw a line from it.');
+        } else if (snapOn) {
+          // No angle snap for standalone dots
+          snapPos = pos;
+        }
+        
+        saveState();
+        elements.push({ 
+          type: 'polypoint', 
+          x: snapPos.x, 
+          y: snapPos.y 
+        });
+        render();
+        if (!pointSnap) setStatus('Dot placed! Click ON a dot to start drawing a line from it.');
+        return;
+      }
+      
       if (currentTool === 'line') { 
         updateSnapPoints();
         // Snap start point to existing points
@@ -1572,14 +1918,23 @@
       // Handle dragging measurement labels - works in ANY mode
       if (isDraggingMeasurement && draggingMeasurementRef) {
         const ref = draggingMeasurementRef;
-        const baseMidX = ref.type === 'area' ? (ref.edge.p1.x + ref.edge.p2.x) / 2 : (ref.edge.x1 + ref.edge.x2) / 2;
-        const baseMidY = ref.type === 'area' ? (ref.edge.p1.y + ref.edge.p2.y) / 2 : (ref.edge.y1 + ref.edge.y2) / 2;
+        let baseMidX, baseMidY;
+        if (ref.type === 'area') {
+          baseMidX = (ref.edge.p1.x + ref.edge.p2.x) / 2;
+          baseMidY = (ref.edge.p1.y + ref.edge.p2.y) / 2;
+        } else {
+          baseMidX = (ref.edge.x1 + ref.edge.x2) / 2;
+          baseMidY = (ref.edge.y1 + ref.edge.y2) / 2;
+        }
         const newOffsetX = (pos.x - dragOffset.x) - baseMidX;
         const newOffsetY = (pos.y - dragOffset.y) - baseMidY;
         
         if (ref.type === 'area') {
           areas[ref.areaIdx].edges[ref.edgeIdx].labelOffsetX = newOffsetX;
           areas[ref.areaIdx].edges[ref.edgeIdx].labelOffsetY = newOffsetY;
+        } else if (ref.type === 'polysegment') {
+          elements[ref.segIdx].labelOffsetX = newOffsetX;
+          elements[ref.segIdx].labelOffsetY = newOffsetY;
         } else {
           elements[ref.lineIdx].labelOffsetX = newOffsetX;
           elements[ref.lineIdx].labelOffsetY = newOffsetY;
@@ -1618,6 +1973,31 @@
             elements[selectedPoint.lineIdx].x2 = newPos.x;
             elements[selectedPoint.lineIdx].y2 = newPos.y;
           }
+          selectedPoint.point = { x: newPos.x, y: newPos.y };
+        } else if (selectedPoint.type === 'polyline') {
+          // Update polyline point and its segments
+          const poly = elements[selectedPoint.polyIdx];
+          poly.points[selectedPoint.pointIdx] = { x: newPos.x, y: newPos.y };
+          // Update segments that use this point
+          for (let i = 0; i < poly.segments.length; i++) {
+            poly.segments[i].p1 = poly.points[i];
+            poly.segments[i].p2 = poly.points[i + 1];
+          }
+          selectedPoint.point = { x: newPos.x, y: newPos.y };
+        } else if (selectedPoint.type === 'polysegment') {
+          // Update polysegment endpoint
+          if (selectedPoint.endpoint === 'start') {
+            elements[selectedPoint.segIdx].x1 = newPos.x;
+            elements[selectedPoint.segIdx].y1 = newPos.y;
+          } else {
+            elements[selectedPoint.segIdx].x2 = newPos.x;
+            elements[selectedPoint.segIdx].y2 = newPos.y;
+          }
+          selectedPoint.point = { x: newPos.x, y: newPos.y };
+        } else if (selectedPoint.type === 'polypoint') {
+          // Update standalone polypoint
+          elements[selectedPoint.idx].x = newPos.x;
+          elements[selectedPoint.idx].y = newPos.y;
           selectedPoint.point = { x: newPos.x, y: newPos.y };
         }
         render();
@@ -1754,6 +2134,84 @@
         ctx.fillText(`${len.toFixed(1)} FT`, boxX + 8, boxY + 78);
       }
       
+      // Polyline preview - when dragging from a dot to create a line
+      if (currentTool === 'polyline' && isDrawingPolyline && polylineStartPoint) {
+        render();
+        updateSnapPoints();
+        const startPt = { x: polylineStartPoint.x, y: polylineStartPoint.y };
+        const dx = pos.x - startPt.x, dy = pos.y - startPt.y;
+        const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+        const { isStraight, nearH, nearV } = isAngleStraight(angleDeg);
+        
+        // Check for snap to existing polypoint
+        const polySnap = findPolylinePoint(pos);
+        let snapped;
+        let snappedToPoint = false;
+        if (polySnap) {
+          snapped = { x: polySnap.x, y: polySnap.y };
+          snappedToPoint = true;
+        } else if (snapOn) {
+          snapped = snapAngle(startPt, pos);
+        } else {
+          snapped = pos;
+        }
+        
+        ctx.beginPath();
+        ctx.moveTo(startPt.x * zoom, startPt.y * zoom);
+        ctx.lineTo(snapped.x * zoom, snapped.y * zoom);
+        ctx.strokeStyle = snappedToPoint ? '#e11d48' : (isStraight ? '#a855f7' : '#ff0000');
+        ctx.lineWidth = snappedToPoint ? 6 : (isStraight ? 6 : 4);
+        ctx.setLineDash(snappedToPoint || isStraight ? [] : [10, 8]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = snappedToPoint ? '#e11d48' : (isStraight ? '#a855f7' : '#ff0000');
+        ctx.beginPath();
+        ctx.arc(snapped.x * zoom, snapped.y * zoom, snappedToPoint ? 14 : 10, 0, Math.PI * 2);
+        ctx.fill();
+        
+        if (snappedToPoint) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(snapped.x * zoom, snapped.y * zoom, 18, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        
+        const boxX = Math.min(snapped.x * zoom + 25, canvas.width - 170);
+        const boxY = Math.max(snapped.y * zoom - 80, 10);
+        ctx.fillStyle = snappedToPoint ? '#e11d48' : (isStraight ? '#a855f7' : '#ff0000');
+        ctx.fillRect(boxX, boxY, 160, 55);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(boxX, boxY, 160, 55);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'left';
+        if (snappedToPoint) {
+          ctx.fillText('⚡ CONNECT TO DOT!', boxX + 10, boxY + 25);
+          ctx.font = '12px Arial';
+          ctx.fillText('Release to connect', boxX + 10, boxY + 45);
+        } else if (isStraight) {
+          let txt = '✓ STRAIGHT!';
+          if (nearH) txt = '✓ HORIZONTAL!';
+          else if (nearV) txt = '✓ VERTICAL!';
+          ctx.fillText(txt, boxX + 10, boxY + 25);
+          ctx.font = '12px Arial';
+          ctx.fillText('Release to place endpoint', boxX + 10, boxY + 45);
+        } else {
+          ctx.fillText('✗ NOT STRAIGHT', boxX + 10, boxY + 25);
+          ctx.font = '14px Arial';
+          ctx.fillText(`Angle: ${Math.abs(angleDeg).toFixed(0)}°`, boxX + 10, boxY + 45);
+        }
+        const len = pixelsToFeet(calcDist(startPt, snapped));
+        ctx.fillStyle = '#000';
+        ctx.fillRect(boxX, boxY + 60, 90, 25);
+        ctx.fillStyle = '#a855f7';
+        ctx.font = 'bold 14px Courier New';
+        ctx.fillText(`${len.toFixed(1)} FT`, boxX + 8, boxY + 78);
+      }
+      
       if (currentTool === 'line' && isDrawing && startPoint) {
         render();
         updateSnapPoints();
@@ -1810,6 +2268,52 @@
         setStatus('Point moved. Click another point to adjust, or continue drawing.');
         return;
       }
+      
+      // Complete polyline segment
+      if (currentTool === 'polyline' && isDrawingPolyline && polylineStartPoint) {
+        const pos = getPos(e);
+        
+        // Check for snap to existing polypoint
+        const polySnap = findPolylinePoint(pos);
+        let endPos;
+        if (polySnap && calcDist({x: polySnap.x, y: polySnap.y}, {x: polylineStartPoint.x, y: polylineStartPoint.y}) > 10) {
+          endPos = { x: polySnap.x, y: polySnap.y };
+          setStatus('⚡ Connected to existing dot!');
+        } else if (snapOn) {
+          endPos = snapAngle({x: polylineStartPoint.x, y: polylineStartPoint.y}, pos);
+        } else {
+          endPos = pos;
+        }
+        
+        // Only create segment if distance is significant
+        if (calcDist({x: polylineStartPoint.x, y: polylineStartPoint.y}, endPos) > 10) {
+          saveState();
+          // Create the line segment
+          elements.push({ 
+            type: 'polysegment', 
+            x1: polylineStartPoint.x, 
+            y1: polylineStartPoint.y, 
+            x2: endPos.x, 
+            y2: endPos.y, 
+            edgeType: currentEdgeType, 
+            lineStyle: currentLineStyle 
+          });
+          
+          // Remove the starting polypoint if it was a standalone dot (it's now part of a segment)
+          if (polylineStartPoint.type === 'polypoint') {
+            const idx = polylineStartPoint.idx;
+            // Don't remove - keep it for reference, or remove only if you want cleaner data
+          }
+          
+          setStatus('Line segment created! Click on a dot to draw another, or click empty space for new dot.');
+        }
+        
+        isDrawingPolyline = false;
+        polylineStartPoint = null;
+        render();
+        return;
+      }
+      
       if (currentTool === 'line' && isDrawing && startPoint) {
         const pos = getPos(e);
         updateSnapPoints();
@@ -1847,6 +2351,31 @@
       setStatus('Area complete! Draw more or use SELECT to edit measurements.');
     }
     
+    function finishPolyline() {
+      if (currentPoints.length < 2) { currentPoints = []; render(); return; }
+      // Create connected line segments WITHOUT closing the shape
+      const segments = [];
+      for (let i = 0; i < currentPoints.length - 1; i++) {
+        segments.push({ 
+          p1: currentPoints[i], 
+          p2: currentPoints[i + 1], 
+          type: currentEdgeType, 
+          lineStyle: currentLineStyle 
+        });
+      }
+      saveState();
+      elements.push({ 
+        type: 'polyline', 
+        points: [...currentPoints], 
+        segments: segments,
+        edgeType: currentEdgeType,
+        lineStyle: currentLineStyle
+      });
+      currentPoints = [];
+      render();
+      setStatus('Open shape complete! Segments are connected but NOT closed.');
+    }
+    
     function findClickedEdge(pos) {
       const threshold = 15;
       for (let a = 0; a < areas.length; a++) {
@@ -1859,6 +2388,17 @@
         if (elements[i].type === 'line') {
           const line = elements[i];
           if (pointToLineDist(pos, {x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}) < threshold) return { type: 'line', lineIdx: i, edge: line };
+        }
+        if (elements[i].type === 'polyline') {
+          const poly = elements[i];
+          for (let s = 0; s < poly.segments.length; s++) {
+            const seg = poly.segments[s];
+            if (pointToLineDist(pos, seg.p1, seg.p2) < threshold) return { type: 'polyline', polyIdx: i, segIdx: s, edge: seg };
+          }
+        }
+        if (elements[i].type === 'polysegment') {
+          const seg = elements[i];
+          if (pointToLineDist(pos, {x:seg.x1,y:seg.y1}, {x:seg.x2,y:seg.y2}) < threshold) return { type: 'polysegment', segIdx: i, edge: seg };
         }
       }
       return null;
@@ -1915,6 +2455,10 @@
       if (editingEdge) {
         if (editingEdge.type === 'area') {
           areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].textSize = currentEditTextSize;
+        } else if (editingEdge.type === 'polyline') {
+          elements[editingEdge.polyIdx].segments[editingEdge.segIdx].textSize = currentEditTextSize;
+        } else if (editingEdge.type === 'polysegment') {
+          elements[editingEdge.segIdx].textSize = currentEditTextSize;
         } else {
           elements[editingEdge.lineIdx].textSize = currentEditTextSize;
         }
@@ -1928,6 +2472,10 @@
       if (editingEdge) {
         if (editingEdge.type === 'area') {
           areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].textColor = currentEditTextColor;
+        } else if (editingEdge.type === 'polyline') {
+          elements[editingEdge.polyIdx].segments[editingEdge.segIdx].textColor = currentEditTextColor;
+        } else if (editingEdge.type === 'polysegment') {
+          elements[editingEdge.segIdx].textColor = currentEditTextColor;
         } else {
           elements[editingEdge.lineIdx].textColor = currentEditTextColor;
         }
@@ -1943,14 +2491,28 @@
         if (editingEdge.type === 'area') {
           areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].textSize = currentEditTextSize;
           areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].textColor = currentEditTextColor;
-          areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].hidden = false;  // Show if was hidden
+          areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].hidden = false;
           if (!isNaN(val) && val > 0) {
             areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].manualLength = val;
+          }
+        } else if (editingEdge.type === 'polyline') {
+          elements[editingEdge.polyIdx].segments[editingEdge.segIdx].textSize = currentEditTextSize;
+          elements[editingEdge.polyIdx].segments[editingEdge.segIdx].textColor = currentEditTextColor;
+          elements[editingEdge.polyIdx].segments[editingEdge.segIdx].hidden = false;
+          if (!isNaN(val) && val > 0) {
+            elements[editingEdge.polyIdx].segments[editingEdge.segIdx].manualLength = val;
+          }
+        } else if (editingEdge.type === 'polysegment') {
+          elements[editingEdge.segIdx].textSize = currentEditTextSize;
+          elements[editingEdge.segIdx].textColor = currentEditTextColor;
+          elements[editingEdge.segIdx].hidden = false;
+          if (!isNaN(val) && val > 0) {
+            elements[editingEdge.segIdx].manualLength = val;
           }
         } else {
           elements[editingEdge.lineIdx].textSize = currentEditTextSize;
           elements[editingEdge.lineIdx].textColor = currentEditTextColor;
-          elements[editingEdge.lineIdx].hidden = false;  // Show if was hidden
+          elements[editingEdge.lineIdx].hidden = false;
           if (!isNaN(val) && val > 0) {
             elements[editingEdge.lineIdx].manualLength = val;
           }
@@ -1966,6 +2528,10 @@
         saveState();
         if (editingEdge.type === 'area') {
           areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].hidden = true;
+        } else if (editingEdge.type === 'polyline') {
+          elements[editingEdge.polyIdx].segments[editingEdge.segIdx].hidden = true;
+        } else if (editingEdge.type === 'polysegment') {
+          elements[editingEdge.segIdx].hidden = true;
         } else {
           elements[editingEdge.lineIdx].hidden = true;
         }
@@ -2422,8 +2988,33 @@
     }
     
     function finishCurrentShape() {
-      // If drawing an area with 3+ points, complete it
-      if (currentPoints.length >= 3) {
+      // If drawing a polyline (open shape) with 2+ points
+      if (currentTool === 'polyline' && currentPoints.length >= 2) {
+        const segments = [];
+        for (let i = 0; i < currentPoints.length - 1; i++) {
+          segments.push({ 
+            p1: currentPoints[i], 
+            p2: currentPoints[i + 1], 
+            type: currentEdgeType, 
+            lineStyle: currentLineStyle 
+          });
+        }
+        saveState();
+        elements.push({ 
+          type: 'polyline', 
+          points: [...currentPoints], 
+          segments: segments,
+          edgeType: currentEdgeType,
+          lineStyle: currentLineStyle
+        });
+        currentPoints = [];
+        render();
+        setStatus('✓ OPEN SHAPE COMPLETED! Draw more or use SELECT to edit.');
+        return;
+      }
+      
+      // If drawing an area (closed shape) with 3+ points
+      if (currentTool === 'area' && currentPoints.length >= 3) {
         const edges = [];
         for (let i = 0; i < currentPoints.length; i++) {
           const p1 = currentPoints[i];
@@ -2434,15 +3025,23 @@
         areas.push({ points: [...currentPoints], edges, pitch: currentPitch });
         currentPoints = [];
         render();
-        setStatus('✓ SHAPE COMPLETED! Click to start new shape.');
+        setStatus('✓ CLOSED SHAPE COMPLETED! Click to start new shape.');
         return;
       }
       
       // If drawing an area with 1-2 points, cancel it
-      if (currentPoints.length > 0) {
+      if (currentTool === 'area' && currentPoints.length > 0 && currentPoints.length < 3) {
         currentPoints = [];
         render();
-        setStatus('Shape cancelled (need 3+ points). Click to start new shape.');
+        setStatus('Area cancelled (need 3+ points). Click to start new shape.');
+        return;
+      }
+      
+      // If drawing a polyline with 0-1 points, cancel it
+      if (currentTool === 'polyline' && currentPoints.length > 0 && currentPoints.length < 2) {
+        currentPoints = [];
+        render();
+        setStatus('Multi-line cancelled (need 2+ points). Click to start.');
         return;
       }
       
@@ -2548,6 +3147,360 @@
     });
     
     document.getElementById('scaleInput').addEventListener('change', render);
+    
+    function saveToPhotos() {
+      // Create a canvas with everything rendered including property info
+      const saveCanvas = document.createElement('canvas');
+      saveCanvas.width = canvas.width;
+      saveCanvas.height = canvas.height;
+      const sctx = saveCanvas.getContext('2d');
+      
+      // White background
+      sctx.fillStyle = '#ffffff';
+      sctx.fillRect(0, 0, saveCanvas.width, saveCanvas.height);
+      
+      // Draw grid if using blank grid
+      if (useBlankGrid) {
+        // Major grid lines
+        sctx.strokeStyle = '#ccc';
+        sctx.lineWidth = 1;
+        const majorGrid = Math.min(saveCanvas.width, saveCanvas.height) / 14;
+        for (let x = 0; x <= saveCanvas.width; x += majorGrid) {
+          sctx.beginPath();
+          sctx.moveTo(x, 0);
+          sctx.lineTo(x, saveCanvas.height);
+          sctx.stroke();
+        }
+        for (let y = 0; y <= saveCanvas.height; y += majorGrid) {
+          sctx.beginPath();
+          sctx.moveTo(0, y);
+          sctx.lineTo(saveCanvas.width, y);
+          sctx.stroke();
+        }
+        // Minor grid lines
+        sctx.strokeStyle = '#e8e8e8';
+        sctx.lineWidth = 0.5;
+        const minorGrid = majorGrid / 4;
+        for (let x = 0; x <= saveCanvas.width; x += minorGrid) {
+          if (x % majorGrid !== 0) {
+            sctx.beginPath();
+            sctx.moveTo(x, 0);
+            sctx.lineTo(x, saveCanvas.height);
+            sctx.stroke();
+          }
+        }
+        for (let y = 0; y <= saveCanvas.height; y += minorGrid) {
+          if (y % majorGrid !== 0) {
+            sctx.beginPath();
+            sctx.moveTo(0, y);
+            sctx.lineTo(saveCanvas.width, y);
+            sctx.stroke();
+          }
+        }
+        // Border
+        sctx.strokeStyle = '#999';
+        sctx.lineWidth = 2;
+        sctx.strokeRect(1, 1, saveCanvas.width - 2, saveCanvas.height - 2);
+      } else if (bgImage) {
+        sctx.drawImage(bgImage, 0, 0, saveCanvas.width, saveCanvas.height);
+      }
+      
+      // Draw all areas
+      areas.forEach((area, idx) => {
+        const color = areaColors[idx % areaColors.length];
+        sctx.globalAlpha = 0.25;
+        sctx.fillStyle = color;
+        sctx.beginPath();
+        area.points.forEach((p, i) => i === 0 ? sctx.moveTo(p.x * zoom, p.y * zoom) : sctx.lineTo(p.x * zoom, p.y * zoom));
+        sctx.closePath();
+        sctx.fill();
+        sctx.globalAlpha = 1;
+        
+        area.edges.forEach(edge => {
+          sctx.strokeStyle = getEdgeColor(edge.type);
+          sctx.lineWidth = 3;
+          if (edge.lineStyle === 'dashed') sctx.setLineDash([10, 6]);
+          else if (edge.lineStyle === 'dotted') sctx.setLineDash([4, 6]);
+          else sctx.setLineDash([]);
+          sctx.beginPath();
+          sctx.moveTo(edge.p1.x * zoom, edge.p1.y * zoom);
+          sctx.lineTo(edge.p2.x * zoom, edge.p2.y * zoom);
+          sctx.stroke();
+          sctx.setLineDash([]);
+          
+          if (!edge.hidden) {
+            const offsetX = edge.labelOffsetX || 0;
+            const offsetY = edge.labelOffsetY || 0;
+            const midX = ((edge.p1.x + edge.p2.x) / 2 + offsetX) * zoom;
+            const midY = ((edge.p1.y + edge.p2.y) / 2 + offsetY) * zoom;
+            const feet = edge.manualLength !== undefined ? edge.manualLength : pixelsToFeet(calcDist(edge.p1, edge.p2));
+            const edgeTextSize = edge.textSize || textSize;
+            const edgeTextColor = edge.textColor || textColor;
+            const boxW = edgeTextSize * 4.5;
+            const boxH = edgeTextSize * 2;
+            sctx.fillStyle = '#2563eb';
+            sctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            sctx.strokeStyle = '#1e40af';
+            sctx.lineWidth = 2;
+            sctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            sctx.fillStyle = edgeTextColor;
+            sctx.font = 'bold ' + edgeTextSize + 'px Arial';
+            sctx.textAlign = 'center';
+            sctx.fillText(feet.toFixed(1) + "'", midX, midY + edgeTextSize/3);
+          }
+        });
+      });
+      
+      // Draw lines
+      elements.filter(e => e.type === 'line').forEach(line => {
+        sctx.strokeStyle = getEdgeColor(line.edgeType);
+        sctx.lineWidth = 3;
+        if (line.lineStyle === 'dashed') sctx.setLineDash([10, 6]);
+        else if (line.lineStyle === 'dotted') sctx.setLineDash([4, 6]);
+        else sctx.setLineDash([]);
+        sctx.beginPath();
+        sctx.moveTo(line.x1 * zoom, line.y1 * zoom);
+        sctx.lineTo(line.x2 * zoom, line.y2 * zoom);
+        sctx.stroke();
+        sctx.setLineDash([]);
+        
+        if (!line.hidden) {
+          const offsetX = line.labelOffsetX || 0;
+          const offsetY = line.labelOffsetY || 0;
+          const midX = ((line.x1 + line.x2) / 2 + offsetX) * zoom;
+          const midY = ((line.y1 + line.y2) / 2 + offsetY) * zoom;
+          const feet = line.manualLength !== undefined ? line.manualLength : pixelsToFeet(calcDist({x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}));
+          const lineTextSize = line.textSize || textSize;
+          const lineTextColor = line.textColor || textColor;
+          const boxW = lineTextSize * 4.5;
+          const boxH = lineTextSize * 2;
+          sctx.fillStyle = '#16a34a';
+          sctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          sctx.strokeStyle = '#166534';
+          sctx.lineWidth = 2;
+          sctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          sctx.fillStyle = lineTextColor;
+          sctx.font = 'bold ' + lineTextSize + 'px Arial';
+          sctx.textAlign = 'center';
+          sctx.fillText(feet.toFixed(1) + "'", midX, midY + lineTextSize/3);
+        }
+      });
+      
+      // Draw polylines (open shapes)
+      elements.filter(e => e.type === 'polyline').forEach(poly => {
+        sctx.strokeStyle = getEdgeColor(poly.edgeType);
+        sctx.lineWidth = 3;
+        if (poly.lineStyle === 'dashed') sctx.setLineDash([10, 6]);
+        else if (poly.lineStyle === 'dotted') sctx.setLineDash([4, 6]);
+        else sctx.setLineDash([]);
+        
+        sctx.beginPath();
+        poly.points.forEach((p, i) => {
+          if (i === 0) sctx.moveTo(p.x * zoom, p.y * zoom);
+          else sctx.lineTo(p.x * zoom, p.y * zoom);
+        });
+        sctx.stroke();
+        sctx.setLineDash([]);
+        
+        poly.segments.forEach(seg => {
+          if (!seg.hidden) {
+            const offsetX = seg.labelOffsetX || 0;
+            const offsetY = seg.labelOffsetY || 0;
+            const midX = ((seg.p1.x + seg.p2.x) / 2 + offsetX) * zoom;
+            const midY = ((seg.p1.y + seg.p2.y) / 2 + offsetY) * zoom;
+            const feet = seg.manualLength !== undefined ? seg.manualLength : pixelsToFeet(calcDist(seg.p1, seg.p2));
+            const segTextSize = seg.textSize || textSize;
+            const segTextColor = seg.textColor || textColor;
+            const boxW = segTextSize * 4.5;
+            const boxH = segTextSize * 2;
+            sctx.fillStyle = '#8b5cf6';
+            sctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            sctx.strokeStyle = '#7c3aed';
+            sctx.lineWidth = 2;
+            sctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            sctx.fillStyle = segTextColor;
+            sctx.font = 'bold ' + segTextSize + 'px Arial';
+            sctx.textAlign = 'center';
+            sctx.fillText(feet.toFixed(1) + "'", midX, midY + segTextSize/3);
+          }
+        });
+      });
+      
+      // Draw polysegments (individual line segments from Open tool)
+      elements.filter(e => e.type === 'polysegment').forEach(seg => {
+        sctx.strokeStyle = getEdgeColor(seg.edgeType || 'default');
+        sctx.lineWidth = 3;
+        if (seg.lineStyle === 'dashed') sctx.setLineDash([10, 6]);
+        else if (seg.lineStyle === 'dotted') sctx.setLineDash([4, 6]);
+        else sctx.setLineDash([]);
+        sctx.beginPath();
+        sctx.moveTo(seg.x1 * zoom, seg.y1 * zoom);
+        sctx.lineTo(seg.x2 * zoom, seg.y2 * zoom);
+        sctx.stroke();
+        sctx.setLineDash([]);
+        
+        if (!seg.hidden) {
+          const offsetX = seg.labelOffsetX || 0;
+          const offsetY = seg.labelOffsetY || 0;
+          const midX = ((seg.x1 + seg.x2) / 2 + offsetX) * zoom;
+          const midY = ((seg.y1 + seg.y2) / 2 + offsetY) * zoom;
+          const feet = seg.manualLength !== undefined ? seg.manualLength : pixelsToFeet(calcDist({x:seg.x1,y:seg.y1}, {x:seg.x2,y:seg.y2}));
+          const segTextSize = seg.textSize || textSize;
+          const segTextColor = seg.textColor || textColor;
+          const boxW = segTextSize * 4.5;
+          const boxH = segTextSize * 2;
+          sctx.fillStyle = '#8b5cf6';
+          sctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          sctx.strokeStyle = '#7c3aed';
+          sctx.lineWidth = 2;
+          sctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          sctx.fillStyle = segTextColor;
+          sctx.font = 'bold ' + segTextSize + 'px Arial';
+          sctx.textAlign = 'center';
+          sctx.fillText(feet.toFixed(1) + "'", midX, midY + segTextSize/3);
+        }
+      });
+      
+      // Draw labels
+      elements.filter(e => e.type === 'label').forEach((lbl) => {
+        sctx.save();
+        sctx.translate(lbl.x * zoom, lbl.y * zoom);
+        sctx.rotate((lbl.rotation || 0) * Math.PI / 180);
+        const lblTextSize = lbl.textSize || textSize;
+        const lblTextColor = lbl.textColor || '#000';
+        sctx.font = 'bold ' + lblTextSize + 'px Arial';
+        sctx.strokeStyle = '#fff';
+        sctx.lineWidth = 3;
+        sctx.textAlign = 'left';
+        sctx.strokeText(lbl.text, 0, 0);
+        sctx.fillStyle = lblTextColor;
+        sctx.fillText(lbl.text, 0, 0);
+        sctx.restore();
+      });
+      
+      // Draw downspouts
+      elements.filter(e => e.type === 'downspout').forEach((ds) => {
+        const x = ds.x * zoom;
+        const y = ds.y * zoom;
+        const dsTextSize = ds.textSize || 12;
+        const dsColor = ds.textColor || '#0ea5e9';
+        const dsRotation = ds.rotation || 0;
+        
+        sctx.save();
+        sctx.translate(x, y);
+        sctx.rotate(dsRotation * Math.PI / 180);
+        
+        sctx.fillStyle = dsColor;
+        sctx.font = 'bold ' + dsTextSize + 'px Arial';
+        sctx.textAlign = 'center';
+        sctx.strokeStyle = '#000';
+        sctx.lineWidth = 3;
+        sctx.strokeText('DOWN SPOUT', 0, 0);
+        sctx.fillText('DOWN SPOUT', 0, 0);
+        sctx.strokeText(ds.length.toFixed(1) + "' LF", 0, dsTextSize + 4);
+        sctx.fillText(ds.length.toFixed(1) + "' LF", 0, dsTextSize + 4);
+        
+        const arrowY = dsTextSize + 20;
+        sctx.beginPath();
+        sctx.moveTo(0, arrowY);
+        sctx.lineTo(0, arrowY + 20);
+        sctx.strokeStyle = dsColor;
+        sctx.lineWidth = 4;
+        sctx.stroke();
+        sctx.beginPath();
+        sctx.moveTo(-8, arrowY + 12);
+        sctx.lineTo(0, arrowY + 22);
+        sctx.lineTo(8, arrowY + 12);
+        sctx.lineWidth = 3;
+        sctx.stroke();
+        
+        sctx.restore();
+      });
+      
+      // Draw property info box
+      const name = document.getElementById('propName').value;
+      const address = document.getElementById('propAddress').value;
+      const job = document.getElementById('propJob').value;
+      const dateVal = document.getElementById('propDate').value;
+      let formattedDate = '';
+      if (dateVal) {
+        const d = new Date(dateVal);
+        formattedDate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+      }
+      
+      // Calculate totals
+      let totalArea = 0, totalLinear = 0;
+      areas.forEach(a => { 
+        totalArea += calcAreaSqft(a); 
+        a.edges.forEach(e => totalLinear += e.manualLength || pixelsToFeet(calcDist(e.p1, e.p2))); 
+      });
+      elements.filter(e => e.type === 'line').forEach(l => { 
+        totalLinear += l.manualLength || pixelsToFeet(calcDist({x:l.x1,y:l.y1},{x:l.x2,y:l.y2})); 
+      });
+      elements.filter(e => e.type === 'polyline').forEach(poly => {
+        poly.segments.forEach(seg => { 
+          totalLinear += seg.manualLength || pixelsToFeet(calcDist(seg.p1, seg.p2)); 
+        });
+      });
+      elements.filter(e => e.type === 'downspout').forEach(ds => { 
+        totalLinear += ds.length || 0; 
+      });
+      
+      // Draw info box
+      let lineCount = 1;
+      if (name) lineCount++;
+      if (address) lineCount++;
+      if (job) lineCount++;
+      if (formattedDate) lineCount++;
+      lineCount += 2; // For totals
+      const boxHeight = 40 + (lineCount * 22);
+      
+      sctx.fillStyle = '#ffffff';
+      sctx.fillRect(10, 10, 320, boxHeight);
+      sctx.strokeStyle = '#1e3a5f';
+      sctx.lineWidth = 3;
+      sctx.strokeRect(10, 10, 320, boxHeight);
+      
+      // Header
+      sctx.fillStyle = '#c1121f';
+      sctx.font = 'bold 16px Arial';
+      sctx.textAlign = 'left';
+      sctx.fillText('ALTA CALIFORNIA CONSTRUCTION', 20, 32);
+      
+      // Info lines
+      sctx.fillStyle = '#000';
+      sctx.font = '14px Arial';
+      let yPos = 55;
+      if (name) { sctx.fillText('Customer: ' + name, 20, yPos); yPos += 22; }
+      if (address) { sctx.fillText('Address: ' + address, 20, yPos); yPos += 22; }
+      if (job) { sctx.fillText('Job: ' + job, 20, yPos); yPos += 22; }
+      if (formattedDate) { sctx.fillText('Date: ' + formattedDate, 20, yPos); yPos += 22; }
+      
+      // Totals
+      yPos += 5;
+      sctx.font = 'bold 14px Arial';
+      sctx.fillStyle = '#16a34a';
+      sctx.fillText('Total Area: ' + totalArea.toFixed(0) + ' SF', 20, yPos);
+      yPos += 22;
+      sctx.fillText('Total Linear: ' + totalLinear.toFixed(0) + ' FT', 20, yPos);
+      
+      // Convert to image and download
+      const dataUrl = saveCanvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = 'property-measurement-' + (name || 'drawing').replace(/\s+/g, '-') + '.png';
+      link.href = dataUrl;
+      
+      // For mobile, open in new tab so user can long-press to save
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        const newWindow = window.open();
+        newWindow.document.write('<html><head><title>Save Image</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:20px;text-align:center;background:#222;"><p style="color:#fff;font-family:Arial;margin-bottom:15px;">📱 Press and hold the image to save to your photos</p><img src="' + dataUrl + '" style="max-width:100%;border:2px solid #fff;"><p style="color:#4ade80;font-family:Arial;margin-top:15px;">✓ ' + (name || 'Property') + '</p></body></html>');
+        newWindow.document.close();
+      } else {
+        link.click();
+      }
+      
+      setStatus('Image saved with all property info!');
+    }
     
     function generateReport() {
       // Render clean version WITHOUT background image
@@ -2694,6 +3647,81 @@
         }
       });
       
+      // Draw polylines (open shapes)
+      elements.filter(e => e.type === 'polyline').forEach(poly => {
+        pctx.strokeStyle = getEdgeColor(poly.edgeType);
+        pctx.lineWidth = 3;
+        if (poly.lineStyle === 'dashed') pctx.setLineDash([10, 6]);
+        else if (poly.lineStyle === 'dotted') pctx.setLineDash([4, 6]);
+        else pctx.setLineDash([]);
+        
+        pctx.beginPath();
+        poly.points.forEach((p, i) => {
+          if (i === 0) pctx.moveTo(p.x * zoom, p.y * zoom);
+          else pctx.lineTo(p.x * zoom, p.y * zoom);
+        });
+        pctx.stroke();
+        pctx.setLineDash([]);
+        
+        poly.segments.forEach(seg => {
+          if (!seg.hidden) {
+            const offsetX = seg.labelOffsetX || 0;
+            const offsetY = seg.labelOffsetY || 0;
+            const midX = ((seg.p1.x + seg.p2.x) / 2 + offsetX) * zoom;
+            const midY = ((seg.p1.y + seg.p2.y) / 2 + offsetY) * zoom;
+            const feet = seg.manualLength !== undefined ? seg.manualLength : pixelsToFeet(calcDist(seg.p1, seg.p2));
+            const segTextSize = seg.textSize || textSize;
+            const segTextColor = seg.textColor || textColor;
+            const boxW = segTextSize * 4.5;
+            const boxH = segTextSize * 2;
+            pctx.fillStyle = '#8b5cf6';
+            pctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            pctx.strokeStyle = '#7c3aed';
+            pctx.lineWidth = 2;
+            pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            pctx.fillStyle = segTextColor;
+            pctx.font = 'bold ' + segTextSize + 'px Arial';
+            pctx.textAlign = 'center';
+            pctx.fillText(feet.toFixed(1) + "'", midX, midY + segTextSize/3);
+          }
+        });
+      });
+      
+      // Draw polysegments (individual line segments from Open tool)
+      elements.filter(e => e.type === 'polysegment').forEach(seg => {
+        pctx.strokeStyle = getEdgeColor(seg.edgeType || 'default');
+        pctx.lineWidth = 3;
+        if (seg.lineStyle === 'dashed') pctx.setLineDash([10, 6]);
+        else if (seg.lineStyle === 'dotted') pctx.setLineDash([4, 6]);
+        else pctx.setLineDash([]);
+        pctx.beginPath();
+        pctx.moveTo(seg.x1 * zoom, seg.y1 * zoom);
+        pctx.lineTo(seg.x2 * zoom, seg.y2 * zoom);
+        pctx.stroke();
+        pctx.setLineDash([]);
+        
+        if (!seg.hidden) {
+          const offsetX = seg.labelOffsetX || 0;
+          const offsetY = seg.labelOffsetY || 0;
+          const midX = ((seg.x1 + seg.x2) / 2 + offsetX) * zoom;
+          const midY = ((seg.y1 + seg.y2) / 2 + offsetY) * zoom;
+          const feet = seg.manualLength !== undefined ? seg.manualLength : pixelsToFeet(calcDist({x:seg.x1,y:seg.y1}, {x:seg.x2,y:seg.y2}));
+          const segTextSize = seg.textSize || textSize;
+          const segTextColor = seg.textColor || textColor;
+          const boxW = segTextSize * 4.5;
+          const boxH = segTextSize * 2;
+          pctx.fillStyle = '#8b5cf6';
+          pctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          pctx.strokeStyle = '#7c3aed';
+          pctx.lineWidth = 2;
+          pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          pctx.fillStyle = segTextColor;
+          pctx.font = 'bold ' + segTextSize + 'px Arial';
+          pctx.textAlign = 'center';
+          pctx.fillText(feet.toFixed(1) + "'", midX, midY + segTextSize/3);
+        }
+      });
+      
       elements.filter(e => e.type === 'label').forEach((lbl) => {
         pctx.save();
         pctx.translate(lbl.x * zoom, lbl.y * zoom);
@@ -2759,6 +3787,7 @@
       let totalArea = 0, totalLinear = 0;
       areas.forEach(a => { totalArea += calcAreaSqft(a); a.edges.forEach(e => totalLinear += e.manualLength || pixelsToFeet(calcDist(e.p1, e.p2))); });
       elements.filter(e => e.type === 'line').forEach(l => { totalLinear += l.manualLength || pixelsToFeet(calcDist({x:l.x1,y:l.y1},{x:l.x2,y:l.y2})); });
+      elements.filter(e => e.type === 'polyline').forEach(poly => { poly.segments.forEach(seg => { totalLinear += seg.manualLength || pixelsToFeet(calcDist(seg.p1, seg.p2)); }); });
       elements.filter(e => e.type === 'downspout').forEach(ds => { totalLinear += ds.length || 0; });
       const jobLine = info.job ? `<br><b>Job:</b> ${info.job}` : '';
       const html = `<!DOCTYPE html><html><head><title>Report</title><style>body{font-family:Arial;max-width:800px;margin:auto;padding:20px}img{max-width:100%}.box{display:inline-block;background:#f5f5f5;padding:20px 40px;margin:10px;text-align:center;border-radius:8px}.box .num{font-size:36px;font-weight:bold;color:#16a34a}</style></head><body><h1>ALTA CALIFORNIA CONSTRUCTION</h1><h2>Property Measurement Report</h2><p><b>Customer:</b> ${info.name}<br><b>Address:</b> ${info.address}${jobLine}<br><b>Date:</b> ${info.date}</p><img src="${img}"><div class="box"><div class="num">${totalArea.toFixed(0)}</div>SQ FT</div><div class="box"><div class="num">${totalLinear.toFixed(0)}</div>LINEAR FT</div><br><br><p><b>PM Signature:</b> _____________________ <b>Date:</b> ___________</p></body></html>`;
@@ -2912,6 +3941,81 @@
         }
       });
       
+      // Draw polylines (open shapes)
+      elements.filter(e => e.type === 'polyline').forEach(poly => {
+        pctx.strokeStyle = getEdgeColor(poly.edgeType);
+        pctx.lineWidth = 3;
+        if (poly.lineStyle === 'dashed') pctx.setLineDash([10, 6]);
+        else if (poly.lineStyle === 'dotted') pctx.setLineDash([4, 6]);
+        else pctx.setLineDash([]);
+        
+        pctx.beginPath();
+        poly.points.forEach((p, i) => {
+          if (i === 0) pctx.moveTo(p.x * zoom, p.y * zoom);
+          else pctx.lineTo(p.x * zoom, p.y * zoom);
+        });
+        pctx.stroke();
+        pctx.setLineDash([]);
+        
+        poly.segments.forEach(seg => {
+          if (!seg.hidden) {
+            const offsetX = seg.labelOffsetX || 0;
+            const offsetY = seg.labelOffsetY || 0;
+            const midX = ((seg.p1.x + seg.p2.x) / 2 + offsetX) * zoom;
+            const midY = ((seg.p1.y + seg.p2.y) / 2 + offsetY) * zoom;
+            const feet = seg.manualLength !== undefined ? seg.manualLength : pixelsToFeet(calcDist(seg.p1, seg.p2));
+            const segTextSize = seg.textSize || textSize;
+            const segTextColor = seg.textColor || textColor;
+            const boxW = segTextSize * 4.5;
+            const boxH = segTextSize * 2;
+            pctx.fillStyle = '#8b5cf6';
+            pctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            pctx.strokeStyle = '#7c3aed';
+            pctx.lineWidth = 2;
+            pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+            pctx.fillStyle = segTextColor;
+            pctx.font = 'bold ' + segTextSize + 'px Arial';
+            pctx.textAlign = 'center';
+            pctx.fillText(feet.toFixed(1) + "'", midX, midY + segTextSize/3);
+          }
+        });
+      });
+      
+      // Draw polysegments (individual line segments from Open tool)
+      elements.filter(e => e.type === 'polysegment').forEach(seg => {
+        pctx.strokeStyle = getEdgeColor(seg.edgeType || 'default');
+        pctx.lineWidth = 3;
+        if (seg.lineStyle === 'dashed') pctx.setLineDash([10, 6]);
+        else if (seg.lineStyle === 'dotted') pctx.setLineDash([4, 6]);
+        else pctx.setLineDash([]);
+        pctx.beginPath();
+        pctx.moveTo(seg.x1 * zoom, seg.y1 * zoom);
+        pctx.lineTo(seg.x2 * zoom, seg.y2 * zoom);
+        pctx.stroke();
+        pctx.setLineDash([]);
+        
+        if (!seg.hidden) {
+          const offsetX = seg.labelOffsetX || 0;
+          const offsetY = seg.labelOffsetY || 0;
+          const midX = ((seg.x1 + seg.x2) / 2 + offsetX) * zoom;
+          const midY = ((seg.y1 + seg.y2) / 2 + offsetY) * zoom;
+          const feet = seg.manualLength !== undefined ? seg.manualLength : pixelsToFeet(calcDist({x:seg.x1,y:seg.y1}, {x:seg.x2,y:seg.y2}));
+          const segTextSize = seg.textSize || textSize;
+          const segTextColor = seg.textColor || textColor;
+          const boxW = segTextSize * 4.5;
+          const boxH = segTextSize * 2;
+          pctx.fillStyle = '#8b5cf6';
+          pctx.fillRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          pctx.strokeStyle = '#7c3aed';
+          pctx.lineWidth = 2;
+          pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
+          pctx.fillStyle = segTextColor;
+          pctx.font = 'bold ' + segTextSize + 'px Arial';
+          pctx.textAlign = 'center';
+          pctx.fillText(feet.toFixed(1) + "'", midX, midY + segTextSize/3);
+        }
+      });
+      
       // Draw labels
       elements.filter(e => e.type === 'label').forEach((lbl) => {
         pctx.save();
@@ -2998,6 +4102,15 @@
         const len = l.manualLength || pixelsToFeet(calcDist({x:l.x1,y:l.y1},{x:l.x2,y:l.y2}));
         totalLinear += len;
         if (byType[l.edgeType] !== undefined) byType[l.edgeType] += len;
+      });
+      
+      // Add polyline measurements
+      elements.filter(e => e.type === 'polyline').forEach(poly => {
+        poly.segments.forEach(seg => {
+          const len = seg.manualLength || pixelsToFeet(calcDist(seg.p1, seg.p2));
+          totalLinear += len;
+          if (byType[seg.type] !== undefined) byType[seg.type] += len;
+        });
       });
       
       // Add downspouts to linear total
