@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>PropertyMeasure Pro - Alta California</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -62,7 +63,7 @@
     .upload-icon { font-size: 64px; margin-bottom: 20px; }
     .upload-btn { background: #2563eb; color: white; padding: 14px 32px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
     input[type="file"] { display: none; }
-    .quick-input { position: absolute; display: none; background: #222; border: 3px solid #60a5fa; border-radius: 8px; padding: 12px; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    .quick-input { position: absolute; display: none; background: #222; border: 3px solid #60a5fa; border-radius: 8px; padding: 12px; z-index: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
     .quick-input input { background: #111; border: 2px solid #444; color: #4ade80; padding: 10px; font-size: 18px; font-weight: bold; width: 120px; border-radius: 4px; }
     .quick-input button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px; margin-right: 6px; font-size: 14px; font-weight: bold; }
     .status-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 28px; background: #2d2d2d; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; font-size: 11px; color: #888; }
@@ -94,6 +95,83 @@
     .workflow-step p { font-size: 11px; color: #aaa; }
     .key-tip { background: #3d2d1a; border: 1px solid #f97316; padding: 12px; border-radius: 6px; margin-top: 15px; }
     .key-tip b { color: #f97316; }
+    
+    /* Mobile Menu Toggle */
+    .mobile-menu-btn { display: none; position: fixed; bottom: 70px; right: 15px; z-index: 200; background: #2563eb; color: white; border: none; width: 56px; height: 56px; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+    .mobile-tools-btn { display: none; position: fixed; bottom: 70px; left: 15px; z-index: 200; background: #16a34a; color: white; border: none; width: 56px; height: 56px; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+    
+    /* Mobile Styles */
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .top-bar { flex-wrap: wrap; height: auto; padding: 10px; gap: 10px; }
+      .brand-text { font-size: 14px; }
+      .top-actions { flex-wrap: wrap; justify-content: center; }
+      .top-btn { padding: 10px 12px; font-size: 11px; }
+      .main-container { flex-direction: column; height: auto; min-height: calc(100vh - 100px); }
+      .tools-panel { width: 100%; flex-direction: row; overflow-x: auto; padding: 8px; justify-content: flex-start; border-right: none; border-bottom: 1px solid #444; }
+      .tool-icon { width: 50px; height: 50px; flex-shrink: 0; }
+      .canvas-container { min-height: 50vh; }
+      .right-panel { position: fixed; top: 0; right: -300px; width: 300px; height: 100vh; z-index: 500; transition: right 0.3s ease; padding-top: 60px; }
+      .right-panel.open { right: 0; }
+      .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
+      .mobile-tools-btn { display: none; }
+      .status-bar { bottom: 0; font-size: 10px; height: 24px; }
+      .panel-section h4 { font-size: 13px; }
+      .prop-input { font-size: 16px !important; padding: 12px !important; }
+      .edge-type { padding: 12px; }
+      .pitch-btn { padding: 10px; font-size: 12px; }
+      .quick-input { left: 10px !important; right: 10px !important; width: auto !important; }
+      .quick-input input { width: 100%; font-size: 20px; }
+      .help-content { padding: 15px; margin: 10px; }
+      .help-header h2 { font-size: 18px; }
+      .upload-box { padding: 20px; }
+      .upload-icon { font-size: 48px; }
+      .upload-btn { padding: 16px 28px; font-size: 18px; }
+      #infoOverlay { font-size: 11px !important; padding: 8px 10px !important; max-width: 200px; }
+      #infoOverlay div { font-size: 11px !important; }
+      .quick-input { position: fixed !important; }
+    }
+    
+    @media (max-width: 600px) {
+      .top-actions { gap: 4px; }
+      .top-btn { padding: 8px 8px; font-size: 10px; }
+      .top-btn.print-btn { padding: 8px 12px; }
+      .brand { display: none; }
+      .tool-icon { width: 44px; height: 44px; font-size: 16px; }
+      .tool-icon span { font-size: 8px; }
+      .canvas-container { min-height: 40vh; }
+      .right-panel { width: 100%; right: -100%; }
+      .right-panel.open { right: 0; }
+      .quick-input { position: fixed !important; width: 90% !important; max-width: 300px; }
+    }
+    
+    /* Panel close button for mobile */
+    .panel-close { display: none; position: absolute; top: 10px; right: 10px; background: #dc2626; color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 10; }
+    @media (max-width: 900px) {
+      .panel-close { display: block; }
+      .right-panel { position: fixed; }
+    }
+    
+    /* iPad specific */
+    @media (min-width: 601px) and (max-width: 900px) {
+      .tools-panel { justify-content: center; }
+      .tool-icon { width: 56px; height: 56px; font-size: 20px; }
+      .canvas-container { min-height: 60vh; }
+      .pitch-btn { padding: 12px; font-size: 14px; }
+      .edge-type { padding: 14px; }
+    }
+    
+    /* Touch-friendly buttons */
+    @media (pointer: coarse) {
+      .top-btn { min-height: 44px; min-width: 44px; }
+      .pitch-btn { min-height: 44px; }
+      .tool-icon { min-width: 48px; min-height: 48px; }
+      button { min-height: 44px; }
+      .quick-input button { min-height: 48px; font-size: 16px; }
+    }
+    
+    /* Prevent text selection on canvas */
+    #mainCanvas { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
   </style>
 </head>
 <body>
@@ -301,6 +379,7 @@
       <button class="tool-icon active" id="tool-area" onclick="setTool('area')">⬡<span>Area</span></button>
       <button class="tool-icon" id="tool-line" onclick="setTool('line')">📏<span>Line</span></button>
       <button class="tool-icon" id="tool-label" onclick="setTool('label')">🏷<span>Label</span></button>
+      <button class="tool-icon" id="tool-downspout" onclick="setTool('downspout')" style="display:none;background:#0ea5e9;">⬇<span>Downspout</span></button>
       <button class="tool-icon" id="tool-select" onclick="setTool('select')">👆<span>Select</span></button>
       <div class="tool-divider"></div>
       <button class="tool-icon active" onclick="toggleSnap()" id="tool-snap">📐<span>Snap</span></button>
@@ -315,7 +394,7 @@
           <div class="upload-icon">📐</div>
           <h2>Upload Property Image</h2>
           <p style="color:#888;margin-bottom:20px;">Aerial photo, satellite, or sketch</p>
-          <label class="upload-btn">Choose Image<input type="file" accept="image/*" onchange="handleUpload(event)"></label>
+          <label class="upload-btn">📷 Choose Image / Take Photo<input type="file" accept="image/*" capture="environment" onchange="handleUpload(event)"></label>
           <p style="color:#4ade80;margin-top:20px;cursor:pointer;" onclick="showHelp()">📚 New here? Click for Beginner's Guide</p>
         </div>
       </div>
@@ -325,6 +404,7 @@
           <div style="font-weight:bold;font-size:16px;color:#c1121f;margin-bottom:8px;border-bottom:2px solid #c1121f;padding-bottom:5px;">ALTA CALIFORNIA CONSTRUCTION</div>
           <div id="overlayName" style="font-size:13px;margin:4px 0;color:#333;"></div>
           <div id="overlayAddress" style="font-size:13px;margin:4px 0;color:#333;"></div>
+          <div id="overlayJob" style="font-size:13px;margin:4px 0;color:#333;"></div>
           <div id="overlayDate" style="font-size:13px;margin:4px 0;color:#333;"></div>
         </div>
       </div>
@@ -343,6 +423,16 @@
           <button onclick="adjustLabelRotation(15)" style="background:#555;color:#fff;padding:4px 8px;font-size:12px;">↷</button>
           <button onclick="setLabelRotation(90)" style="background:#555;color:#fff;padding:4px 6px;font-size:10px;">90°</button>
         </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:4px;">
+          <span style="font-size:10px;color:#888;">Color:</span>
+          <button onclick="setLabelTextColor('#ffffff')" class="color-btn" style="background:#ffffff;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="White"></button>
+          <button onclick="setLabelTextColor('#ffff00')" class="color-btn" style="background:#ffff00;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Yellow"></button>
+          <button onclick="setLabelTextColor('#00ff00')" class="color-btn" style="background:#00ff00;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Green"></button>
+          <button onclick="setLabelTextColor('#00ffff')" class="color-btn" style="background:#00ffff;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Cyan"></button>
+          <button onclick="setLabelTextColor('#ff6600')" class="color-btn" style="background:#ff6600;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Orange"></button>
+          <button onclick="setLabelTextColor('#ff00ff')" class="color-btn" style="background:#ff00ff;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Magenta"></button>
+          <button onclick="setLabelTextColor('#000000')" class="color-btn" style="background:#000000;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Black"></button>
+        </div>
         <div style="margin-top:8px;">
           <button onclick="confirmLabel()" style="background:#4ade80;color:#000;">✓</button>
           <button onclick="cancelInput()" style="background:#dc2626;color:#fff;">✗</button>
@@ -358,19 +448,49 @@
           <span id="edgeTextSizeDisplay" style="color:#4ade80;font-size:12px;min-width:30px;text-align:center;">14</span>
           <button onclick="adjustEdgeTextSize(2)" style="background:#555;color:#fff;padding:4px 8px;font-size:12px;">A+</button>
         </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:4px;">
+          <span style="font-size:10px;color:#888;">Color:</span>
+          <button onclick="setEdgeTextColor('#ffffff')" class="color-btn" style="background:#ffffff;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="White"></button>
+          <button onclick="setEdgeTextColor('#ffff00')" class="color-btn" style="background:#ffff00;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Yellow"></button>
+          <button onclick="setEdgeTextColor('#00ff00')" class="color-btn" style="background:#00ff00;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Green"></button>
+          <button onclick="setEdgeTextColor('#00ffff')" class="color-btn" style="background:#00ffff;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Cyan"></button>
+          <button onclick="setEdgeTextColor('#ff6600')" class="color-btn" style="background:#ff6600;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Orange"></button>
+          <button onclick="setEdgeTextColor('#ff00ff')" class="color-btn" style="background:#ff00ff;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Magenta"></button>
+          <button onclick="setEdgeTextColor('#000000')" class="color-btn" style="background:#000000;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Black"></button>
+        </div>
         <div style="margin-top:8px;display:flex;gap:4px;">
           <button onclick="confirmEdge()" style="background:#4ade80;color:#000;flex:1;">✓ Save</button>
           <button onclick="hideEdgeMeasurement()" style="background:#f97316;color:#fff;flex:1;">🚫 Hide</button>
           <button onclick="cancelInput()" style="background:#dc2626;color:#fff;">✗</button>
         </div>
       </div>
+      <div class="quick-input" id="downspoutInput">
+        <div style="font-size:12px;color:#0ea5e9;font-weight:bold;margin-bottom:8px;">⬇ DOWNSPOUT</div>
+        <div style="font-size:10px;color:#888;margin-bottom:4px;">LINEAR FEET (height):</div>
+        <input type="number" id="downspoutLength" placeholder="10" step="0.1" style="width:100px;">
+        <span style="color:#4ade80;margin-left:4px;">FT</span>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:4px;">
+          <span style="font-size:10px;color:#888;">Color:</span>
+          <button onclick="setDownspoutColor('#0ea5e9')" class="color-btn" style="background:#0ea5e9;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Blue"></button>
+          <button onclick="setDownspoutColor('#ffffff')" class="color-btn" style="background:#ffffff;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="White"></button>
+          <button onclick="setDownspoutColor('#ffff00')" class="color-btn" style="background:#ffff00;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Yellow"></button>
+          <button onclick="setDownspoutColor('#00ff00')" class="color-btn" style="background:#00ff00;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Green"></button>
+          <button onclick="setDownspoutColor('#ff6600')" class="color-btn" style="background:#ff6600;width:24px;height:24px;border:2px solid #888;border-radius:4px;cursor:pointer;" title="Orange"></button>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:4px;">
+          <button onclick="confirmDownspout()" style="background:#4ade80;color:#000;flex:1;">✓ Place</button>
+          <button onclick="cancelInput()" style="background:#dc2626;color:#fff;">✗</button>
+        </div>
+      </div>
     </div>
     
-    <div class="right-panel">
+    <div class="right-panel" id="rightPanel">
+      <button class="panel-close" onclick="toggleRightPanel()">×</button>
       <div class="panel-section" style="background:#1a2a3a;border:3px solid #4ade80;padding:15px;margin-bottom:15px;">
         <h4 style="color:#4ade80;font-size:15px;margin-bottom:12px;">🏠 PROPERTY INFO</h4>
         <input type="text" class="prop-input" id="propName" placeholder="Customer Name" oninput="updateInfoOverlay()" style="font-weight:bold;font-size:14px;padding:10px;">
         <input type="text" class="prop-input" id="propAddress" placeholder="Property Address" oninput="updateInfoOverlay()" style="font-size:14px;padding:10px;">
+        <input type="text" class="prop-input" id="propJob" placeholder="Job Description (e.g. Roof Replacement)" oninput="updateInfoOverlay()" style="font-size:14px;padding:10px;">
         <input type="date" class="prop-input" id="propDate" oninput="updateInfoOverlay()" style="font-size:14px;padding:10px;">
         <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;background:#2a3a4a;padding:10px;border-radius:4px;">
           <input type="checkbox" id="showInfoOverlay" onchange="toggleInfoOverlay()" checked style="width:18px;height:18px;">
@@ -410,6 +530,46 @@
               <button class="pitch-btn" onclick="setSelectedLabelRotation(90)" style="padding:4px 8px;font-size:10px;">90°</button>
               <button class="pitch-btn" onclick="setSelectedLabelRotation(-45)" style="padding:4px 8px;font-size:10px;">-45°</button>
             </div>
+          </div>
+          <div style="text-align:center;margin-top:8px;font-size:10px;color:#888;">Keys: +/- size, R rotate, Del remove</div>
+        </div>
+      </div>
+      
+      <div class="panel-section" id="selectedDownspoutControls" style="display:none;">
+        <h4>⬇ Selected Downspout</h4>
+        <div style="background:#0ea5e933;border:2px solid #0ea5e9;border-radius:6px;padding:10px;">
+          <div style="margin-bottom:10px;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">TEXT SIZE:</div>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:center;">
+              <button class="pitch-btn" onclick="resizeSelectedDownspout(-2)" style="font-size:16px;padding:8px 14px;">A-</button>
+              <span id="selectedDownspoutSize" style="font-size:16px;font-weight:bold;color:#4ade80;">12px</span>
+              <button class="pitch-btn" onclick="resizeSelectedDownspout(2)" style="font-size:16px;padding:8px 14px;">A+</button>
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">ROTATE:</div>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:center;">
+              <button class="pitch-btn" onclick="rotateSelectedDownspout(-15)" style="padding:8px 12px;">↶ -15°</button>
+              <span id="selectedDownspoutRotation" style="font-size:14px;font-weight:bold;color:#f97316;">0°</span>
+              <button class="pitch-btn" onclick="rotateSelectedDownspout(15)" style="padding:8px 12px;">↷ +15°</button>
+            </div>
+            <div style="display:flex;gap:4px;margin-top:6px;justify-content:center;">
+              <button class="pitch-btn" onclick="setSelectedDownspoutRotation(0)" style="padding:4px 8px;font-size:10px;">0°</button>
+              <button class="pitch-btn" onclick="setSelectedDownspoutRotation(90)" style="padding:4px 8px;font-size:10px;">90°</button>
+              <button class="pitch-btn" onclick="setSelectedDownspoutRotation(180)" style="padding:4px 8px;font-size:10px;">180°</button>
+              <button class="pitch-btn" onclick="setSelectedDownspoutRotation(270)" style="padding:4px 8px;font-size:10px;">270°</button>
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:10px;color:#888;margin-bottom:4px;">LINEAR FEET:</div>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:center;">
+              <button class="pitch-btn" onclick="adjustSelectedDownspoutLength(-1)" style="padding:8px 12px;">-1</button>
+              <span id="selectedDownspoutLength" style="font-size:16px;font-weight:bold;color:#0ea5e9;">10'</span>
+              <button class="pitch-btn" onclick="adjustSelectedDownspoutLength(1)" style="padding:8px 12px;">+1</button>
+            </div>
+          </div>
+          <div>
+            <button class="pitch-btn" onclick="deleteSelectedDownspout()" style="background:#dc2626;color:#fff;width:100%;padding:8px;">🗑️ Delete Downspout</button>
           </div>
           <div style="text-align:center;margin-top:8px;font-size:10px;color:#888;">Keys: +/- size, R rotate, Del remove</div>
         </div>
@@ -489,6 +649,9 @@
     <span id="statusText">Upload an image to begin • Click ❓ Help for beginner guide</span>
     <span class="coords" id="coordsText">0, 0</span>
   </div>
+  
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-btn" onclick="toggleRightPanel()">☰</button>
 
   <script>
     const jobEdgeTypes = {
@@ -536,16 +699,20 @@
     const POINT_SNAP_RADIUS = 15;  // Pixels - how close to snap to existing points
     let allSnapPoints = [];  // Cache of all snappable points
     let isDrawing = false, currentPoints = [], startPoint = null;
-    let editingEdge = null, labelPos = null;
+    let editingEdge = null, labelPos = null, downspoutPos = null;
+    let downspoutColor = '#0ea5e9';  // Default downspout color (blue)
     let editingLabelIdx = null;  // Track which label is being edited
     let currentEditTextSize = 14;  // Track text size being edited
     let currentEditRotation = 0;  // Track rotation being edited
+    let currentEditTextColor = '#ffffff';  // Track text color being edited
     let selectedLabel = null, isDraggingLabel = false, dragOffset = {x:0, y:0};
+    let selectedDownspout = null, isDraggingDownspout = false;
     let isDraggingMeasurement = false, draggingMeasurementRef = null;
     let selectedPoint = null;  // {type: 'area'|'line', areaIdx, pointIdx, lineIdx, endpoint}
     let isDraggingPoint = false;
     let canvasW = 800, canvasH = 600;
     let textSize = 14;  // Default text size for measurements and labels
+    let textColor = '#ffffff';  // Default text color for measurements and labels
     let lineOpacity = 1.0;  // Transparency for lines and measurements (1 = solid, 0 = invisible)
     let bgOpacity = 0.5;  // Background image opacity
     
@@ -565,6 +732,8 @@
     function changeJobType() {
       currentJob = document.getElementById('jobType').value;
       document.getElementById('pitchSection').style.display = currentJob === 'roof' ? 'block' : 'none';
+      // Show downspout tool only for gutter jobs
+      document.getElementById('tool-downspout').style.display = currentJob === 'gutter' ? 'flex' : 'none';
       renderEdgeTypes();
       updateTotals();
     }
@@ -589,7 +758,9 @@
       currentPoints = [];
       isDrawing = false;
       selectedLabel = null;
+      selectedDownspout = null;
       isDraggingLabel = false;
+      isDraggingDownspout = false;
       document.querySelectorAll('.tools-panel .tool-icon').forEach(t => t.classList.remove('active'));
       document.getElementById('tool-' + tool)?.classList.add('active');
       canvas.style.cursor = tool === 'select' ? 'pointer' : 'crosshair';
@@ -598,6 +769,7 @@
       else if (tool === 'line') setStatus('LINE: Click and drag. Each line is SEPARATE (not connected).');
       else if (tool === 'select') setStatus('SELECT: Drag ORANGE dots to adjust points. Click measurements to edit.');
       else if (tool === 'label') setStatus('LABEL: Click to add text.');
+      else if (tool === 'downspout') setStatus('DOWNSPOUT: Click to place a downspout marker and enter linear feet.');
     }
     
     function setEdgeType(type) {
@@ -648,6 +820,7 @@
     function updateInfoOverlay() {
       const name = document.getElementById('propName').value;
       const address = document.getElementById('propAddress').value;
+      const job = document.getElementById('propJob').value;
       const dateVal = document.getElementById('propDate').value;
       let formattedDate = '';
       if (dateVal) {
@@ -656,9 +829,10 @@
       }
       document.getElementById('overlayName').innerHTML = name ? '<b>Customer:</b> ' + name : '';
       document.getElementById('overlayAddress').innerHTML = address ? '<b>Address:</b> ' + address : '';
+      document.getElementById('overlayJob').innerHTML = job ? '<b>Job:</b> ' + job : '';
       document.getElementById('overlayDate').innerHTML = formattedDate ? '<b>Date:</b> ' + formattedDate : '';
       // Show overlay if any field has content
-      const hasContent = name || address || dateVal;
+      const hasContent = name || address || job || dateVal;
       const showCheckbox = document.getElementById('showInfoOverlay').checked;
       document.getElementById('infoOverlay').style.display = (hasContent && showCheckbox) ? 'block' : 'none';
     }
@@ -676,7 +850,10 @@
         const img = new Image();
         img.onload = function() {
           bgImage = img;
-          const maxW = window.innerWidth - 380, maxH = window.innerHeight - 100;
+          // Adjust for mobile vs desktop
+          const isMobile = window.innerWidth <= 900;
+          const maxW = isMobile ? window.innerWidth - 20 : window.innerWidth - 380;
+          const maxH = isMobile ? window.innerHeight - 200 : window.innerHeight - 100;
           const sc = Math.min(maxW / img.width, maxH / img.height, 1);
           canvasW = Math.round(img.width * sc);
           canvasH = Math.round(img.height * sc);
@@ -685,7 +862,7 @@
           document.getElementById('canvasWrapper').style.display = 'block';
           updateInfoOverlay();  // Show info if any fields are filled
           render();
-          setStatus('Ready! Click corners to trace. Watch for GREEN = straight!');
+          setStatus(isMobile ? 'Tap corners to trace. Double-tap to finish.' : 'Ready! Click corners to trace. Watch for GREEN = straight!');
         };
         img.src = ev.target.result;
       };
@@ -825,6 +1002,7 @@
             const isManual = edge.manualLength !== undefined;
             // Use individual text size or default
             const edgeTextSize = edge.textSize || textSize;
+            const edgeTextColor = edge.textColor || textColor;
             const boxW = edgeTextSize * 4.5;
             const boxH = edgeTextSize * 2;
             // Draw measurement box
@@ -833,7 +1011,7 @@
             ctx.strokeStyle = isManual ? '#22c55e' : '#60a5fa';
             ctx.lineWidth = 3;
             ctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = edgeTextColor;
             ctx.font = 'bold ' + edgeTextSize + 'px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(feet.toFixed(1) + "'", midX, midY + edgeTextSize/3);
@@ -878,8 +1056,9 @@
           const midY = ((line.y1 + line.y2) / 2 + offsetY) * zoom;
           const feet = line.manualLength !== undefined ? line.manualLength : pixelsToFeet(calcDist({x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}));
           const isManual = line.manualLength !== undefined;
-          // Use individual text size or default
+          // Use individual text size and color or default
           const lineTextSize = line.textSize || textSize;
+          const lineTextColor = line.textColor || textColor;
           const boxW = lineTextSize * 4.5;
           const boxH = lineTextSize * 2;
           // Draw measurement box
@@ -888,7 +1067,7 @@
           ctx.strokeStyle = isManual ? '#22c55e' : '#60a5fa';
           ctx.lineWidth = 3;
           ctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
-          ctx.fillStyle = '#fff';
+          ctx.fillStyle = lineTextColor;
           ctx.font = 'bold ' + lineTextSize + 'px Arial';
           ctx.textAlign = 'center';
           ctx.fillText(feet.toFixed(1) + "'", midX, midY + lineTextSize/3);
@@ -920,6 +1099,7 @@
         ctx.translate(lbl.x * zoom, lbl.y * zoom);
         ctx.rotate((lbl.rotation || 0) * Math.PI / 180);
         const lblTextSize = lbl.textSize || textSize;
+        const lblTextColor = lbl.textColor || textColor;
         ctx.font = 'bold ' + lblTextSize + 'px Arial';
         const width = ctx.measureText(lbl.text).width;
         if (selectedLabel === labelIdx) {
@@ -929,7 +1109,7 @@
           ctx.lineWidth = 2;
           ctx.strokeRect(-5, -lblTextSize - 2, width + 10, lblTextSize + 8);
         }
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = lblTextColor;
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 3;
         ctx.textAlign = 'left';
@@ -937,6 +1117,63 @@
         ctx.fillText(lbl.text, 0, 0);
         ctx.restore();
         labelIdx++;
+      });
+      
+      // Draw downspouts
+      let dsIdx = 0;
+      elements.filter(e => e.type === 'downspout').forEach((ds) => {
+        const x = ds.x * zoom;
+        const y = ds.y * zoom;
+        const dsTextSize = ds.textSize || 12;
+        const dsColor = ds.textColor || '#0ea5e9';
+        const dsRotation = ds.rotation || 0;
+        
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(dsRotation * Math.PI / 180);
+        
+        // Selection highlight (glow effect)
+        if (selectedDownspout === dsIdx) {
+          ctx.shadowColor = '#f97316';
+          ctx.shadowBlur = 15;
+        }
+        
+        // Draw text - DOWN SPOUT on top (at origin now due to translate)
+        ctx.fillStyle = dsColor;
+        ctx.font = 'bold ' + dsTextSize + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.strokeText('DOWN SPOUT', 0, 0);
+        ctx.fillText('DOWN SPOUT', 0, 0);
+        
+        // Feet measurement below DOWN SPOUT
+        ctx.strokeText(ds.length.toFixed(1) + "' LF", 0, dsTextSize + 4);
+        ctx.fillText(ds.length.toFixed(1) + "' LF", 0, dsTextSize + 4);
+        
+        // Down arrow at bottom
+        const arrowY = dsTextSize + 20;
+        ctx.beginPath();
+        ctx.moveTo(0, arrowY);
+        ctx.lineTo(0, arrowY + 20);
+        ctx.strokeStyle = dsColor;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        // Arrow head
+        ctx.beginPath();
+        ctx.moveTo(-8, arrowY + 12);
+        ctx.lineTo(0, arrowY + 22);
+        ctx.lineTo(8, arrowY + 12);
+        ctx.strokeStyle = dsColor;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        // Reset shadow
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        
+        ctx.restore();
+        dsIdx++;
       });
       
       // Draw current area points
@@ -977,6 +1214,7 @@
       
       updateTotals();
       updateSelectedLabelPanel();
+      updateSelectedDownspoutPanel();
     }
     
     function pixelsToFeet(px) { return (px / 96) * (parseFloat(document.getElementById('scaleInput').value) || 10); }
@@ -993,6 +1231,13 @@
       let totalArea = 0, totalLinear = 0, byType = {};
       const types = jobEdgeTypes[currentJob] || [];
       types.forEach(t => byType[t.id] = 0);
+      
+      // Calculate downspout total
+      let downspoutTotal = 0;
+      elements.filter(e => e.type === 'downspout').forEach(ds => {
+        downspoutTotal += ds.length || 0;
+      });
+      
       areas.forEach(a => {
         totalArea += calcAreaSqft(a);
         a.edges.forEach(e => {
@@ -1006,16 +1251,97 @@
         totalLinear += len;
         if (byType[line.edgeType] !== undefined) byType[line.edgeType] += len;
       });
+      
+      // Add downspouts to linear total
+      totalLinear += downspoutTotal;
+      
       document.getElementById('totalArea').textContent = totalArea.toFixed(0) + ' SF';
       document.getElementById('totalLinear').textContent = totalLinear.toFixed(0) + ' FT';
-      document.getElementById('breakdownRows').innerHTML = types.filter(t => byType[t.id] > 0).map(t => 
+      
+      // Build breakdown rows
+      let breakdownHTML = types.filter(t => byType[t.id] > 0).map(t => 
         `<div class="summary-row"><span>${t.name}</span><span class="value">${byType[t.id].toFixed(0)} FT</span></div>`
       ).join('');
+      
+      // Add downspout row if any
+      if (downspoutTotal > 0) {
+        breakdownHTML += `<div class="summary-row"><span>⬇ Downspouts</span><span class="value">${downspoutTotal.toFixed(0)} FT</span></div>`;
+      }
+      
+      document.getElementById('breakdownRows').innerHTML = breakdownHTML;
     }
     
     canvas.addEventListener('mousedown', onDown);
     canvas.addEventListener('mousemove', onMove);
     canvas.addEventListener('mouseup', onUp);
+    
+    // Touch events for mobile/tablet
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    let lastTap = 0;
+    function handleTouchStart(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const mouseEvent = new MouseEvent('mousedown', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      // Detect double tap
+      const now = Date.now();
+      if (now - lastTap < 300) {
+        canvas.dispatchEvent(new MouseEvent('dblclick', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        }));
+      }
+      lastTap = now;
+      onDown(mouseEvent);
+    }
+    
+    function handleTouchMove(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent('mousemove', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      onMove(mouseEvent);
+    }
+    
+    function handleTouchEnd(e) {
+      e.preventDefault();
+      const mouseEvent = new MouseEvent('mouseup', {});
+      onUp(mouseEvent);
+    }
+    
+    // Mobile panel toggle
+    function toggleRightPanel() {
+      const panel = document.getElementById('rightPanel');
+      const btn = document.querySelector('.mobile-menu-btn');
+      panel.classList.toggle('open');
+      if (panel.classList.contains('open')) {
+        btn.innerHTML = '✕';
+        btn.style.background = '#dc2626';
+      } else {
+        btn.innerHTML = '☰';
+        btn.style.background = '#2563eb';
+      }
+    }
+    
+    // Close panel when clicking outside on mobile
+    document.addEventListener('click', function(e) {
+      const panel = document.getElementById('rightPanel');
+      const btn = document.querySelector('.mobile-menu-btn');
+      if (window.innerWidth <= 900 && panel.classList.contains('open')) {
+        if (!panel.contains(e.target) && !btn.contains(e.target)) {
+          toggleRightPanel();
+        }
+      }
+    });
+    
     canvas.addEventListener('dblclick', (e) => { 
       if (currentTool === 'area' && currentPoints.length > 2) { finishArea(); return; }
       // Double-click to edit label text
@@ -1079,6 +1405,21 @@
       return null;
     }
     
+    function findClickedDownspout(pos) {
+      const downspouts = elements.filter(e => e.type === 'downspout');
+      for (let i = downspouts.length - 1; i >= 0; i--) {
+        const ds = downspouts[i];
+        const dsTextSize = ds.textSize || 12;
+        // Hit area covers text and arrow (no box)
+        const hitW = 80, hitH = dsTextSize + 50;
+        if (pos.x >= ds.x - hitW/2 && pos.x <= ds.x + hitW/2 && 
+            pos.y >= ds.y - dsTextSize && pos.y <= ds.y + hitH) {
+          return i;
+        }
+      }
+      return null;
+    }
+    
     function findClickedPoint(pos) {
       const threshold = 12;  // Click radius for points
       
@@ -1138,6 +1479,7 @@
           selectedPoint = clickedPt;
           isDraggingPoint = true;
           selectedLabel = null;
+          selectedDownspout = null;
           setStatus('Drag to move point. Release to place. Snaps to nearby points.');
           render();
           return;
@@ -1147,6 +1489,7 @@
         const clickedLabelIdx = findClickedLabel(pos);
         if (clickedLabelIdx !== null) {
           selectedLabel = clickedLabelIdx;
+          selectedDownspout = null;
           isDraggingLabel = true;
           const labels = elements.filter(el => el.type === 'label');
           dragOffset = { x: pos.x - labels[clickedLabelIdx].x, y: pos.y - labels[clickedLabelIdx].y };
@@ -1155,20 +1498,38 @@
           return;
         }
         
+        // Check for downspouts
+        const clickedDsIdx = findClickedDownspout(pos);
+        if (clickedDsIdx !== null) {
+          selectedDownspout = clickedDsIdx;
+          selectedLabel = null;
+          isDraggingDownspout = true;
+          const downspouts = elements.filter(el => el.type === 'downspout');
+          dragOffset = { x: pos.x - downspouts[clickedDsIdx].x, y: pos.y - downspouts[clickedDsIdx].y };
+          render();
+          updateSelectedDownspoutPanel();
+          setStatus('Downspout selected: + to enlarge, - to shrink, Delete=remove, drag to move');
+          return;
+        }
+        
         // Check for clicking on edge line itself
         const clicked = findClickedEdge(pos);
         if (clicked) {
           selectedLabel = null;
+          selectedDownspout = null;
           editingEdge = clicked;
           showEdgeInput(clicked, pos);
           return;
         }
         selectedLabel = null;
+        selectedDownspout = null;
         render();
         return;
       }
       
       if (currentTool === 'label') { labelPos = pos; showLabelInput(pos); return; }
+      
+      if (currentTool === 'downspout') { downspoutPos = pos; showDownspoutInput(pos); return; }
       
       if (currentTool === 'area') {
         updateSnapPoints();
@@ -1287,6 +1648,24 @@
         for (let i = 0; i < elements.length; i++) {
           if (elements[i].type === 'label') {
             if (count === selectedLabel) {
+              elements[i].x = pos.x - dragOffset.x;
+              elements[i].y = pos.y - dragOffset.y;
+              break;
+            }
+            count++;
+          }
+        }
+        render();
+        return;
+      }
+      
+      // Handle dragging downspouts
+      if (currentTool === 'select' && isDraggingDownspout && selectedDownspout !== null) {
+        const downspouts = elements.filter(el => el.type === 'downspout');
+        let count = 0;
+        for (let i = 0; i < elements.length; i++) {
+          if (elements[i].type === 'downspout') {
+            if (count === selectedDownspout) {
               elements[i].x = pos.x - dragOffset.x;
               elements[i].y = pos.y - dragOffset.y;
               break;
@@ -1417,6 +1796,7 @@
     
     function onUp(e) {
       if (isDraggingLabel) { isDraggingLabel = false; return; }
+      if (isDraggingDownspout) { isDraggingDownspout = false; return; }
       if (isDraggingMeasurement) { 
         isDraggingMeasurement = false; 
         draggingMeasurementRef = null;
@@ -1502,18 +1882,29 @@
       // Get current text size for this edge
       if (clicked.type === 'area') {
         currentEditTextSize = clicked.edge.textSize || textSize;
+        currentEditTextColor = clicked.edge.textColor || textColor;
       } else {
         currentEditTextSize = clicked.edge.textSize || textSize;
+        currentEditTextColor = clicked.edge.textColor || textColor;
       }
       document.getElementById('edgeTextSizeDisplay').textContent = currentEditTextSize;
       input.style.display = 'block';
-      // Position near but not on top of click
-      input.style.left = (pos.x * zoom + 70) + 'px';
-      input.style.top = (pos.y * zoom - 30) + 'px';
+      
+      // On mobile, center the input dialog
+      if (window.innerWidth <= 900) {
+        input.style.left = '50%';
+        input.style.top = '30%';
+        input.style.transform = 'translate(-50%, -50%)';
+      } else {
+        input.style.left = (pos.x * zoom + 70) + 'px';
+        input.style.top = (pos.y * zoom - 30) + 'px';
+        input.style.transform = 'none';
+      }
+      
       // Use setTimeout to ensure focus works after DOM update
       setTimeout(() => {
         lengthField.focus();
-      }, 10);
+      }, 50);
       setStatus('Type measurement and press Enter');
     }
     
@@ -1531,19 +1922,34 @@
       }
     }
     
+    function setEdgeTextColor(color) {
+      currentEditTextColor = color;
+      // Apply immediately so user can see
+      if (editingEdge) {
+        if (editingEdge.type === 'area') {
+          areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].textColor = currentEditTextColor;
+        } else {
+          elements[editingEdge.lineIdx].textColor = currentEditTextColor;
+        }
+        render();
+      }
+    }
+    
     function confirmEdge() {
       const val = parseFloat(document.getElementById('edgeLength').value);
       if (editingEdge) {
         saveState();
-        // Save text size regardless of whether measurement was entered
+        // Save text size and color regardless of whether measurement was entered
         if (editingEdge.type === 'area') {
           areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].textSize = currentEditTextSize;
+          areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].textColor = currentEditTextColor;
           areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].hidden = false;  // Show if was hidden
           if (!isNaN(val) && val > 0) {
             areas[editingEdge.areaIdx].edges[editingEdge.edgeIdx].manualLength = val;
           }
         } else {
           elements[editingEdge.lineIdx].textSize = currentEditTextSize;
+          elements[editingEdge.lineIdx].textColor = currentEditTextColor;
           elements[editingEdge.lineIdx].hidden = false;  // Show if was hidden
           if (!isNaN(val) && val > 0) {
             elements[editingEdge.lineIdx].manualLength = val;
@@ -1572,17 +1978,80 @@
     function showLabelInput(pos) {
       const input = document.getElementById('labelInput');
       input.style.display = 'block';
-      input.style.left = (pos.x * zoom + 60) + 'px';
-      input.style.top = (pos.y * zoom + 50) + 'px';
+      
+      // On mobile, center the input dialog
+      if (window.innerWidth <= 900) {
+        input.style.left = '50%';
+        input.style.top = '30%';
+        input.style.transform = 'translate(-50%, -50%)';
+      } else {
+        input.style.left = (pos.x * zoom + 60) + 'px';
+        input.style.top = (pos.y * zoom + 50) + 'px';
+        input.style.transform = 'none';
+      }
+      
       document.getElementById('labelText').value = '';
       currentEditTextSize = textSize;  // Use default for new labels
       currentEditRotation = 0;  // Reset rotation for new labels
+      currentEditTextColor = textColor;  // Use default color for new labels
       document.getElementById('labelTextSizeDisplay').textContent = currentEditTextSize;
       document.getElementById('labelRotationDisplay').textContent = currentEditRotation + '°';
       setTimeout(() => {
         document.getElementById('labelText').focus();
-      }, 10);
+      }, 50);
     }
+    
+    function showDownspoutInput(pos) {
+      const input = document.getElementById('downspoutInput');
+      input.style.display = 'block';
+      
+      // On mobile, center the input dialog
+      if (window.innerWidth <= 900) {
+        input.style.left = '50%';
+        input.style.top = '30%';
+        input.style.transform = 'translate(-50%, -50%)';
+      } else {
+        input.style.left = (pos.x * zoom + 60) + 'px';
+        input.style.top = (pos.y * zoom + 50) + 'px';
+        input.style.transform = 'none';
+      }
+      
+      document.getElementById('downspoutLength').value = '';
+      downspoutColor = '#0ea5e9';  // Reset to default blue
+      setTimeout(() => {
+        document.getElementById('downspoutLength').focus();
+      }, 50);
+      setStatus('Enter downspout linear feet (height) and press Enter');
+    }
+    
+    function setDownspoutColor(color) {
+      downspoutColor = color;
+    }
+    
+    function confirmDownspout() {
+      const lengthVal = parseFloat(document.getElementById('downspoutLength').value);
+      if (downspoutPos) {
+        saveState();
+        const length = (!isNaN(lengthVal) && lengthVal > 0) ? lengthVal : 10;  // Default 10 ft
+        elements.push({ 
+          type: 'downspout', 
+          x: downspoutPos.x, 
+          y: downspoutPos.y, 
+          length: length,
+          textColor: downspoutColor,
+          textSize: textSize
+        });
+        render();
+        setStatus(`Downspout placed: ${length} FT`);
+      }
+      cancelInput();
+    }
+    
+    // Handle Enter key for downspout input
+    document.getElementById('downspoutLength').addEventListener('keydown', e => { 
+      if (e.key === 'Enter') confirmDownspout(); 
+      if (e.key === 'Escape') cancelInput(); 
+    });
     
     function adjustLabelRotation(delta) {
       currentEditRotation = (currentEditRotation + delta) % 360;
@@ -1640,6 +2109,27 @@
             if (elements[i].type === 'label') {
               if (count === editingLabelIdx) {
                 elements[i].textSize = currentEditTextSize;
+                break;
+              }
+              count++;
+            }
+          }
+          render();
+        }
+      }
+    }
+    
+    function setLabelTextColor(color) {
+      currentEditTextColor = color;
+      // If editing existing label, apply immediately
+      if (editingLabelIdx !== null) {
+        const labels = elements.filter(e => e.type === 'label');
+        if (editingLabelIdx < labels.length) {
+          let count = 0;
+          for (let i = 0; i < elements.length; i++) {
+            if (elements[i].type === 'label') {
+              if (count === editingLabelIdx) {
+                elements[i].textColor = currentEditTextColor;
                 break;
               }
               count++;
@@ -1722,6 +2212,120 @@
       panel.style.display = 'none';
     }
     
+    function updateSelectedDownspoutPanel() {
+      const panel = document.getElementById('selectedDownspoutControls');
+      if (selectedDownspout !== null) {
+        const downspouts = elements.filter(e => e.type === 'downspout');
+        if (selectedDownspout < downspouts.length) {
+          const ds = downspouts[selectedDownspout];
+          document.getElementById('selectedDownspoutSize').textContent = (ds.textSize || 12) + 'px';
+          document.getElementById('selectedDownspoutLength').textContent = (ds.length || 10) + "'";
+          document.getElementById('selectedDownspoutRotation').textContent = (ds.rotation || 0) + '°';
+          panel.style.display = 'block';
+          return;
+        }
+      }
+      panel.style.display = 'none';
+    }
+    
+    function resizeSelectedDownspout(delta) {
+      if (selectedDownspout === null) return;
+      const downspouts = elements.filter(e => e.type === 'downspout');
+      if (selectedDownspout >= downspouts.length) return;
+      let count = 0, actualIdx = -1;
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'downspout') {
+          if (count === selectedDownspout) { actualIdx = i; break; }
+          count++;
+        }
+      }
+      if (actualIdx >= 0) {
+        elements[actualIdx].textSize = Math.max(8, Math.min(30, (elements[actualIdx].textSize || 12) + delta));
+        document.getElementById('selectedDownspoutSize').textContent = elements[actualIdx].textSize + 'px';
+        render();
+        setStatus(`Downspout text size: ${elements[actualIdx].textSize}px`);
+      }
+    }
+    
+    function adjustSelectedDownspoutLength(delta) {
+      if (selectedDownspout === null) return;
+      const downspouts = elements.filter(e => e.type === 'downspout');
+      if (selectedDownspout >= downspouts.length) return;
+      let count = 0, actualIdx = -1;
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'downspout') {
+          if (count === selectedDownspout) { actualIdx = i; break; }
+          count++;
+        }
+      }
+      if (actualIdx >= 0) {
+        saveState();
+        elements[actualIdx].length = Math.max(1, (elements[actualIdx].length || 10) + delta);
+        document.getElementById('selectedDownspoutLength').textContent = elements[actualIdx].length + "'";
+        render();
+        setStatus(`Downspout length: ${elements[actualIdx].length} FT`);
+      }
+    }
+    
+    function deleteSelectedDownspout() {
+      if (selectedDownspout === null) return;
+      const downspouts = elements.filter(e => e.type === 'downspout');
+      if (selectedDownspout >= downspouts.length) return;
+      let count = 0, actualIdx = -1;
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'downspout') {
+          if (count === selectedDownspout) { actualIdx = i; break; }
+          count++;
+        }
+      }
+      if (actualIdx >= 0) {
+        saveState();
+        elements.splice(actualIdx, 1);
+        selectedDownspout = null;
+        updateSelectedDownspoutPanel();
+        render();
+        setStatus('Downspout deleted');
+      }
+    }
+    
+    function rotateSelectedDownspout(delta) {
+      if (selectedDownspout === null) return;
+      const downspouts = elements.filter(e => e.type === 'downspout');
+      if (selectedDownspout >= downspouts.length) return;
+      let count = 0, actualIdx = -1;
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'downspout') {
+          if (count === selectedDownspout) { actualIdx = i; break; }
+          count++;
+        }
+      }
+      if (actualIdx >= 0) {
+        elements[actualIdx].rotation = ((elements[actualIdx].rotation || 0) + delta) % 360;
+        document.getElementById('selectedDownspoutRotation').textContent = elements[actualIdx].rotation + '°';
+        render();
+        setStatus(`Rotated to ${elements[actualIdx].rotation}°`);
+      }
+    }
+    
+    function setSelectedDownspoutRotation(angle) {
+      if (selectedDownspout === null) return;
+      const downspouts = elements.filter(e => e.type === 'downspout');
+      if (selectedDownspout >= downspouts.length) return;
+      let count = 0, actualIdx = -1;
+      for (let i = 0; i < elements.length; i++) {
+        if (elements[i].type === 'downspout') {
+          if (count === selectedDownspout) { actualIdx = i; break; }
+          count++;
+        }
+      }
+      if (actualIdx >= 0) {
+        elements[actualIdx].rotation = angle;
+        document.getElementById('selectedDownspoutRotation').textContent = elements[actualIdx].rotation + '°';
+        render();
+        setStatus(`Rotation set to ${angle}°`);
+      }
+    }
+    
     function editLabelText(labelIdx, pos) {
       // Find the actual label in elements array
       const labels = elements.filter(e => e.type === 'label');
@@ -1758,6 +2362,7 @@
                 if (count === editingLabelIdx) {
                   elements[i].text = text;
                   elements[i].textSize = currentEditTextSize;
+                  elements[i].textColor = currentEditTextColor;
                   elements[i].rotation = currentEditRotation;
                   break;
                 }
@@ -1770,7 +2375,7 @@
         } else if (labelPos) {
           // New label
           saveState();
-          elements.push({ type: 'label', x: labelPos.x, y: labelPos.y, text, rotation: currentEditRotation, textSize: currentEditTextSize });
+          elements.push({ type: 'label', x: labelPos.x, y: labelPos.y, text, rotation: currentEditRotation, textSize: currentEditTextSize, textColor: currentEditTextColor });
         }
         render();
       }
@@ -1780,8 +2385,10 @@
     function cancelInput() {
       document.getElementById('labelInput').style.display = 'none';
       document.getElementById('edgeInput').style.display = 'none';
+      document.getElementById('downspoutInput').style.display = 'none';
       editingEdge = null;
       labelPos = null;
+      downspoutPos = null;
       editingLabelIdx = null;
     }
     
@@ -1896,6 +2503,29 @@
           return; 
         }
       }
+      // Keyboard handlers for selected downspout
+      if (selectedDownspout !== null) {
+        // R key to rotate
+        if (e.key === 'r' || e.key === 'R') { 
+          rotateSelectedDownspout(15);
+          return; 
+        }
+        // Delete key
+        if (e.key === 'Delete' || e.key === 'Backspace') { 
+          deleteSelectedDownspout();
+          return; 
+        }
+        // + key to enlarge
+        if (e.key === '=' || e.key === '+') { 
+          resizeSelectedDownspout(2);
+          return; 
+        }
+        // - key to shrink
+        if (e.key === '-' || e.key === '_') { 
+          resizeSelectedDownspout(-2);
+          return; 
+        }
+      }
       if (e.key === 'a') setTool('area');
       if (e.key === 'l') setTool('line');
       if (e.key === 'v') setTool('select');
@@ -1909,6 +2539,7 @@
           setStatus('Shape cancelled. Click to start new shape.');
         }
         selectedLabel = null; 
+        selectedDownspout = null;
         closeHelp(); 
         cancelInput(); 
         render(); 
@@ -1933,6 +2564,7 @@
       const showInfo = document.getElementById('showInfoOverlay').checked;
       const name = document.getElementById('propName').value;
       const address = document.getElementById('propAddress').value;
+      const job = document.getElementById('propJob').value;
       const dateVal = document.getElementById('propDate').value;
       let formattedDate = '';
       if (dateVal) {
@@ -1944,6 +2576,7 @@
       let lineCount = 1;
       if (name) lineCount++;
       if (address) lineCount++;
+      if (job) lineCount++;
       if (formattedDate) lineCount++;
       const boxHeight = 40 + (lineCount * 20);
       
@@ -1971,6 +2604,7 @@
       let yPos = 60;
       if (name) { pctx.fillText('Customer: ' + name, 20, yPos); yPos += 20; }
       if (address) { pctx.fillText('Address: ' + address, 20, yPos); yPos += 20; }
+      if (job) { pctx.fillText('Job: ' + job, 20, yPos); yPos += 20; }
       if (formattedDate) { pctx.fillText('Date: ' + formattedDate, 20, yPos); }
       
       // Draw areas
@@ -2002,6 +2636,7 @@
             const midY = ((edge.p1.y + edge.p2.y) / 2 + offsetY) * zoom;
             const feet = edge.manualLength !== undefined ? edge.manualLength : pixelsToFeet(calcDist(edge.p1, edge.p2));
             const edgeTextSize = edge.textSize || textSize;
+            const edgeTextColor = edge.textColor || textColor;
             const boxW = edgeTextSize * 4.5;
             const boxH = edgeTextSize * 2;
             pctx.fillStyle = '#16a34a';
@@ -2009,7 +2644,7 @@
             pctx.strokeStyle = '#166534';
             pctx.lineWidth = 2;
             pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
-            pctx.fillStyle = '#fff';
+            pctx.fillStyle = edgeTextColor;
             pctx.font = 'bold ' + edgeTextSize + 'px Arial';
             pctx.textAlign = 'center';
             pctx.fillText(feet.toFixed(1) + "'", midX, midY + edgeTextSize/3);
@@ -2044,6 +2679,7 @@
           const midY = ((line.y1 + line.y2) / 2 + offsetY) * zoom;
           const feet = line.manualLength !== undefined ? line.manualLength : pixelsToFeet(calcDist({x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}));
           const lineTextSize = line.textSize || textSize;
+          const lineTextColor = line.textColor || textColor;
           const boxW = lineTextSize * 4.5;
           const boxH = lineTextSize * 2;
           pctx.fillStyle = '#16a34a';
@@ -2051,7 +2687,7 @@
           pctx.strokeStyle = '#166534';
           pctx.lineWidth = 2;
           pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
-          pctx.fillStyle = '#fff';
+          pctx.fillStyle = lineTextColor;
           pctx.font = 'bold ' + lineTextSize + 'px Arial';
           pctx.textAlign = 'center';
           pctx.fillText(feet.toFixed(1) + "'", midX, midY + lineTextSize/3);
@@ -2063,19 +2699,69 @@
         pctx.translate(lbl.x * zoom, lbl.y * zoom);
         pctx.rotate((lbl.rotation || 0) * Math.PI / 180);
         const lblTextSize = lbl.textSize || textSize;
+        const lblTextColor = lbl.textColor || '#000';
         pctx.font = 'bold ' + lblTextSize + 'px Arial';
-        pctx.fillStyle = '#000';
+        pctx.strokeStyle = '#fff';
+        pctx.lineWidth = 3;
         pctx.textAlign = 'left';
+        pctx.strokeText(lbl.text, 0, 0);
+        pctx.fillStyle = lblTextColor;
         pctx.fillText(lbl.text, 0, 0);
         pctx.restore();
       });
       
+      // Draw downspouts
+      elements.filter(e => e.type === 'downspout').forEach((ds) => {
+        const x = ds.x * zoom;
+        const y = ds.y * zoom;
+        const dsTextSize = ds.textSize || 12;
+        const dsColor = ds.textColor || '#0ea5e9';
+        const dsRotation = ds.rotation || 0;
+        
+        pctx.save();
+        pctx.translate(x, y);
+        pctx.rotate(dsRotation * Math.PI / 180);
+        
+        // Draw text - DOWN SPOUT on top
+        pctx.fillStyle = dsColor;
+        pctx.font = 'bold ' + dsTextSize + 'px Arial';
+        pctx.textAlign = 'center';
+        pctx.fillText('DOWN SPOUT', 0, 0);
+        
+        // Feet measurement below
+        pctx.fillText(ds.length.toFixed(1) + "' LF", 0, dsTextSize + 4);
+        
+        // Down arrow at bottom
+        const arrowY = dsTextSize + 20;
+        pctx.beginPath();
+        pctx.moveTo(0, arrowY);
+        pctx.lineTo(0, arrowY + 20);
+        pctx.strokeStyle = dsColor;
+        pctx.lineWidth = 3;
+        pctx.stroke();
+        // Arrow head
+        pctx.beginPath();
+        pctx.moveTo(-6, arrowY + 12);
+        pctx.lineTo(0, arrowY + 20);
+        pctx.lineTo(6, arrowY + 12);
+        pctx.stroke();
+        
+        pctx.restore();
+      });
+      
       const img = printCanvas.toDataURL();
-      const info = { name: document.getElementById('propName').value || 'N/A', address: document.getElementById('propAddress').value || 'N/A', date: document.getElementById('propDate').value };
+      const info = { 
+        name: document.getElementById('propName').value || 'N/A', 
+        address: document.getElementById('propAddress').value || 'N/A', 
+        job: document.getElementById('propJob').value || '',
+        date: document.getElementById('propDate').value 
+      };
       let totalArea = 0, totalLinear = 0;
       areas.forEach(a => { totalArea += calcAreaSqft(a); a.edges.forEach(e => totalLinear += e.manualLength || pixelsToFeet(calcDist(e.p1, e.p2))); });
       elements.filter(e => e.type === 'line').forEach(l => { totalLinear += l.manualLength || pixelsToFeet(calcDist({x:l.x1,y:l.y1},{x:l.x2,y:l.y2})); });
-      const html = `<!DOCTYPE html><html><head><title>Report</title><style>body{font-family:Arial;max-width:800px;margin:auto;padding:20px}img{max-width:100%}.box{display:inline-block;background:#f5f5f5;padding:20px 40px;margin:10px;text-align:center;border-radius:8px}.box .num{font-size:36px;font-weight:bold;color:#16a34a}</style></head><body><h1>ALTA CALIFORNIA CONSTRUCTION</h1><h2>Property Measurement Report</h2><p><b>Customer:</b> ${info.name}<br><b>Address:</b> ${info.address}<br><b>Date:</b> ${info.date}</p><img src="${img}"><div class="box"><div class="num">${totalArea.toFixed(0)}</div>SQ FT</div><div class="box"><div class="num">${totalLinear.toFixed(0)}</div>LINEAR FT</div><br><br><p><b>PM Signature:</b> _____________________ <b>Date:</b> ___________</p></body></html>`;
+      elements.filter(e => e.type === 'downspout').forEach(ds => { totalLinear += ds.length || 0; });
+      const jobLine = info.job ? `<br><b>Job:</b> ${info.job}` : '';
+      const html = `<!DOCTYPE html><html><head><title>Report</title><style>body{font-family:Arial;max-width:800px;margin:auto;padding:20px}img{max-width:100%}.box{display:inline-block;background:#f5f5f5;padding:20px 40px;margin:10px;text-align:center;border-radius:8px}.box .num{font-size:36px;font-weight:bold;color:#16a34a}</style></head><body><h1>ALTA CALIFORNIA CONSTRUCTION</h1><h2>Property Measurement Report</h2><p><b>Customer:</b> ${info.name}<br><b>Address:</b> ${info.address}${jobLine}<br><b>Date:</b> ${info.date}</p><img src="${img}"><div class="box"><div class="num">${totalArea.toFixed(0)}</div>SQ FT</div><div class="box"><div class="num">${totalLinear.toFixed(0)}</div>LINEAR FT</div><br><br><p><b>PM Signature:</b> _____________________ <b>Date:</b> ___________</p></body></html>`;
       const blob = new Blob([html], {type: 'text/html'});
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'property-report.html'; a.click();
     }
@@ -2094,6 +2780,7 @@
       // Draw professional info box - ALWAYS show on print
       const name = document.getElementById('propName').value;
       const address = document.getElementById('propAddress').value;
+      const job = document.getElementById('propJob').value;
       const dateVal = document.getElementById('propDate').value;
       let formattedDate = '';
       if (dateVal) {
@@ -2104,6 +2791,7 @@
       let lineCount = 1;
       if (name) lineCount++;
       if (address) lineCount++;
+      if (job) lineCount++;
       if (formattedDate) lineCount++;
       const boxHeight = 40 + (lineCount * 20);
       
@@ -2131,6 +2819,7 @@
       let yPos = 60;
       if (name) { pctx.fillText('Customer: ' + name, 20, yPos); yPos += 20; }
       if (address) { pctx.fillText('Address: ' + address, 20, yPos); yPos += 20; }
+      if (job) { pctx.fillText('Job: ' + job, 20, yPos); yPos += 20; }
       if (formattedDate) { pctx.fillText('Date: ' + formattedDate, 20, yPos); }
       
       // Draw areas (no background image)
@@ -2163,6 +2852,7 @@
             const midY = ((edge.p1.y + edge.p2.y) / 2 + offsetY) * zoom;
             const feet = edge.manualLength !== undefined ? edge.manualLength : pixelsToFeet(calcDist(edge.p1, edge.p2));
             const edgeTextSize = edge.textSize || textSize;
+            const edgeTextColor = edge.textColor || textColor;
             const boxW = edgeTextSize * 4.5;
             const boxH = edgeTextSize * 2;
             pctx.fillStyle = '#16a34a';
@@ -2170,7 +2860,7 @@
             pctx.strokeStyle = '#166534';
             pctx.lineWidth = 2;
           pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
-          pctx.fillStyle = '#fff';
+          pctx.fillStyle = edgeTextColor;
           pctx.font = 'bold ' + edgeTextSize + 'px Arial';
           pctx.textAlign = 'center';
           pctx.fillText(feet.toFixed(1) + "'", midX, midY + edgeTextSize/3);
@@ -2207,6 +2897,7 @@
           const midY = ((line.y1 + line.y2) / 2 + offsetY) * zoom;
           const feet = line.manualLength !== undefined ? line.manualLength : pixelsToFeet(calcDist({x:line.x1,y:line.y1}, {x:line.x2,y:line.y2}));
           const lineTextSize = line.textSize || textSize;
+          const lineTextColor = line.textColor || textColor;
           const boxW = lineTextSize * 4.5;
           const boxH = lineTextSize * 2;
           pctx.fillStyle = '#16a34a';
@@ -2214,7 +2905,7 @@
           pctx.strokeStyle = '#166534';
           pctx.lineWidth = 2;
           pctx.strokeRect(midX - boxW/2, midY - boxH/2, boxW, boxH);
-          pctx.fillStyle = '#fff';
+          pctx.fillStyle = lineTextColor;
           pctx.font = 'bold ' + lineTextSize + 'px Arial';
           pctx.textAlign = 'center';
           pctx.fillText(feet.toFixed(1) + "'", midX, midY + lineTextSize/3);
@@ -2227,10 +2918,53 @@
         pctx.translate(lbl.x * zoom, lbl.y * zoom);
         pctx.rotate((lbl.rotation || 0) * Math.PI / 180);
         const lblTextSize = lbl.textSize || textSize;
+        const lblTextColor = lbl.textColor || '#000';
         pctx.font = 'bold ' + lblTextSize + 'px Arial';
-        pctx.fillStyle = '#000';
+        pctx.strokeStyle = '#fff';
+        pctx.lineWidth = 3;
         pctx.textAlign = 'left';
+        pctx.strokeText(lbl.text, 0, 0);
+        pctx.fillStyle = lblTextColor;
         pctx.fillText(lbl.text, 0, 0);
+        pctx.restore();
+      });
+      
+      // Draw downspouts
+      elements.filter(e => e.type === 'downspout').forEach((ds) => {
+        const x = ds.x * zoom;
+        const y = ds.y * zoom;
+        const dsTextSize = ds.textSize || 12;
+        const dsColor = ds.textColor || '#0ea5e9';
+        const dsRotation = ds.rotation || 0;
+        
+        pctx.save();
+        pctx.translate(x, y);
+        pctx.rotate(dsRotation * Math.PI / 180);
+        
+        // Draw text - DOWN SPOUT on top
+        pctx.fillStyle = dsColor;
+        pctx.font = 'bold ' + dsTextSize + 'px Arial';
+        pctx.textAlign = 'center';
+        pctx.fillText('DOWN SPOUT', 0, 0);
+        
+        // Feet measurement below
+        pctx.fillText(ds.length.toFixed(1) + "' LF", 0, dsTextSize + 4);
+        
+        // Down arrow at bottom
+        const arrowY = dsTextSize + 20;
+        pctx.beginPath();
+        pctx.moveTo(0, arrowY);
+        pctx.lineTo(0, arrowY + 20);
+        pctx.strokeStyle = dsColor;
+        pctx.lineWidth = 3;
+        pctx.stroke();
+        // Arrow head
+        pctx.beginPath();
+        pctx.moveTo(-6, arrowY + 12);
+        pctx.lineTo(0, arrowY + 20);
+        pctx.lineTo(6, arrowY + 12);
+        pctx.stroke();
+        
         pctx.restore();
       });
       
@@ -2246,6 +2980,12 @@
       const types = jobEdgeTypes[currentJob] || [];
       types.forEach(t => byType[t.id] = 0);
       
+      // Calculate downspout total
+      let downspoutTotal = 0;
+      elements.filter(e => e.type === 'downspout').forEach(ds => {
+        downspoutTotal += ds.length || 0;
+      });
+      
       areas.forEach(a => { 
         totalArea += calcAreaSqft(a); 
         a.edges.forEach(e => {
@@ -2260,10 +3000,18 @@
         if (byType[l.edgeType] !== undefined) byType[l.edgeType] += len;
       });
       
+      // Add downspouts to linear total
+      totalLinear += downspoutTotal;
+      
       // Build breakdown table
       let breakdownHTML = types.filter(t => byType[t.id] > 0).map(t => 
         `<tr><td style="padding:8px;border-bottom:1px solid #ddd;">${t.name}</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;font-weight:bold;">${byType[t.id].toFixed(1)} FT</td></tr>`
       ).join('');
+      
+      // Add downspout row if any
+      if (downspoutTotal > 0) {
+        breakdownHTML += `<tr><td style="padding:8px;border-bottom:1px solid #ddd;">⬇ Downspouts</td><td style="padding:8px;border-bottom:1px solid #ddd;text-align:right;font-weight:bold;">${downspoutTotal.toFixed(1)} FT</td></tr>`
+      }
       
       const w = window.open('', '_blank');
       w.document.write(`<!DOCTYPE html><html><head><title>Property Report - ${info.name}</title><style>
